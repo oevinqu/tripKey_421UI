@@ -116,6 +116,12 @@ interface AccommodationInfo {
   checkOut: string;
 }
 
+interface LinkInfo {
+  id: string;
+  url: string;
+  description: string;
+}
+
 export default function DumpPage() {
   const [text, setText] = useState("");
   const [toast, setToast] = useState({ visible: false, message: "" });
@@ -134,6 +140,12 @@ export default function DumpPage() {
   const [accommodationExpanded, setAccommodationExpanded] = useState(false);
   const [accommodations, setAccommodations] = useState<AccommodationInfo[]>([
     { id: "1", name: "", location: "", checkIn: "", checkOut: "" },
+  ]);
+
+  // 링크 정보
+  const [linkExpanded, setLinkExpanded] = useState(false);
+  const [links, setLinks] = useState<LinkInfo[]>([
+    { id: "1", url: "", description: "" },
   ]);
 
   const updateFlight = (id: string, field: keyof FlightInfo, value: string) => {
@@ -158,6 +170,25 @@ export default function DumpPage() {
   const updateAccommodation = (id: string, field: keyof AccommodationInfo, value: string) => {
     setAccommodations((prev) =>
       prev.map((a) => (a.id === id ? { ...a, [field]: value } : a))
+    );
+  };
+
+  const addLink = () => {
+    setLinks((prev) => [
+      ...prev,
+      { id: String(Date.now()), url: "", description: "" },
+    ]);
+  };
+
+  const removeLink = (id: string) => {
+    if (links.length > 1) {
+      setLinks((prev) => prev.filter((l) => l.id !== id));
+    }
+  };
+
+  const updateLink = (id: string, field: keyof LinkInfo, value: string) => {
+    setLinks((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, [field]: value } : l))
     );
   };
 
@@ -217,6 +248,9 @@ export default function DumpPage() {
     ]);
     setAccommodations([
       { id: "1", name: "", location: "", checkIn: "", checkOut: "" },
+    ]);
+    setLinks([
+      { id: "1", url: "", description: "" },
     ]);
     textareaRef.current?.focus();
   };
@@ -448,23 +482,6 @@ export default function DumpPage() {
             )}
           </div>
 
-          {/* URL 제한 안내 배너 */}
-          <div className="mb-6 bg-[#FEF3C7] border border-[#FCD34D] rounded-xl p-4 flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#F59E0B] flex items-center justify-center shrink-0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="2" />
-                <path d="M12 8V12M12 16H12.01" stroke="white" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-[#92400E] font-semibold text-sm mb-1">URL/링크는 입력할 수 없어요</p>
-              <p className="text-[#A16207] text-sm leading-relaxed">
-                AI가 링크 내용을 직접 읽을 수 없기 때문에, 링크 대신 해당 내용을 텍스트로 복사해서 붙여넣어 주세요.
-                예: 블로그 글의 장소명, 영업시간, 주소 등을 직접 적어주시면 됩니다.
-              </p>
-            </div>
-          </div>
-
           {/* 텍스트 입력 영역 */}
           <div className="mb-6">
             <div className="bg-white border border-[#E0E0E0] rounded-xl overflow-hidden hover:border-[#534AB7] transition-colors focus-within:border-[#534AB7] focus-within:ring-2 focus-within:ring-[#534AB7]/20 shadow-sm">
@@ -513,7 +530,7 @@ export default function DumpPage() {
           </div>
 
           {/* 입력 팁 섹션 */}
-          <div className="bg-[#F3F1FE] border border-[#E8E6F5] rounded-xl p-5">
+          <div className="mb-6 bg-[#F3F1FE] border border-[#E8E6F5] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-7 h-7 rounded-full bg-[#534AB7] flex items-center justify-center">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -530,6 +547,98 @@ export default function DumpPage() {
                 </li>
               ))}
             </ul>
+          </div>
+
+          {/* 참고 링크 입력 섹션 */}
+          <div className="bg-white border border-[#E0E0E0] rounded-xl overflow-hidden shadow-sm">
+            <button
+              onClick={() => setLinkExpanded(!linkExpanded)}
+              className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#FAFAFA] transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#E0F2FE] flex items-center justify-center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M10 13C10.4295 13.5741 10.9774 14.0492 11.6066 14.3929C12.2357 14.7367 12.9315 14.9411 13.6467 14.9923C14.3618 15.0435 15.0796 14.9404 15.7513 14.6898C16.4231 14.4392 17.0331 14.0471 17.54 13.54L20.54 10.54C21.4508 9.59699 21.9548 8.33397 21.9434 7.02299C21.932 5.71201 21.4061 4.45794 20.4791 3.5309C19.5521 2.60386 18.298 2.07802 16.987 2.06663C15.676 2.05523 14.413 2.55921 13.47 3.47L11.75 5.18" stroke="#0284C7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M14 11C13.5705 10.4259 13.0226 9.95083 12.3934 9.60707C11.7643 9.26331 11.0685 9.05889 10.3533 9.00768C9.63816 8.95646 8.92037 9.05964 8.24861 9.31023C7.57685 9.56082 6.96684 9.95294 6.46 10.46L3.46 13.46C2.54921 14.403 2.04523 15.666 2.05663 16.977C2.06802 18.288 2.59386 19.5421 3.5209 20.4691C4.44794 21.3961 5.70201 21.922 7.01299 21.9334C8.32397 21.9448 9.58699 21.4408 10.53 20.53L12.24 18.82" stroke="#0284C7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold text-[#1A1A1A] text-sm">참고 링크</span>
+                  <span className="text-xs text-[#888] ml-2">(선택)</span>
+                </div>
+              </div>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                className={`text-[#888] transition-transform duration-200 ${linkExpanded ? "rotate-180" : ""}`}
+              >
+                <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            {linkExpanded && (
+              <div className="px-5 pb-5 border-t border-[#F0F0F0]">
+                <div className="pt-4">
+                  <p className="text-xs text-[#888] mb-4 leading-relaxed">
+                    블로그, 유튜브, 인스타그램 등 참고할 링크가 있다면 추가해주세요. 링크 내용을 간단히 설명해주시면 AI가 더 잘 이해할 수 있어요.
+                  </p>
+                  <div className="space-y-3">
+                    {links.map((link, index) => (
+                      <div key={link.id} className="p-4 bg-[#FAFAFA] rounded-lg border border-[#EBEBEB]">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-semibold px-2 py-1 rounded bg-[#E0F2FE] text-[#0369A1]">
+                            링크 {index + 1}
+                          </span>
+                          {links.length > 1 && (
+                            <button
+                              onClick={() => removeLink(link.id)}
+                              className="text-xs text-[#DC2626] hover:text-[#B91C1C] transition-colors flex items-center gap-1"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                              </svg>
+                              삭제
+                            </button>
+                          )}
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-xs font-medium text-[#666] mb-1.5">URL</label>
+                            <input
+                              type="url"
+                              placeholder="https://..."
+                              value={link.url}
+                              onChange={(e) => updateLink(link.id, "url", e.target.value)}
+                              className="w-full px-3 py-2.5 border border-[#E0E0E0] rounded-lg text-sm bg-white focus:outline-none focus:border-[#534AB7] transition-colors placeholder:text-[#B0B0B0]"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-[#666] mb-1.5">설명 (어떤 내용인가요?)</label>
+                            <input
+                              type="text"
+                              placeholder="예: 오사카 맛집 추천 블로그, 교토 여행 브이로그 등"
+                              value={link.description}
+                              onChange={(e) => updateLink(link.id, "description", e.target.value)}
+                              className="w-full px-3 py-2.5 border border-[#E0E0E0] rounded-lg text-sm bg-white focus:outline-none focus:border-[#534AB7] transition-colors placeholder:text-[#B0B0B0]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      onClick={addLink}
+                      className="w-full py-3 border-2 border-dashed border-[#E0E0E0] rounded-lg text-sm text-[#666] hover:border-[#534AB7] hover:text-[#534AB7] hover:bg-[#F9F8FF] transition-colors flex items-center justify-center gap-2"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      링크 추가
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 다음 단계 버튼 */}
