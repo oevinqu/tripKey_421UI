@@ -265,7 +265,7 @@ export default function DumpPage() {
             </p>
           </div>
 
-          {{/* 항공편 정보 입력 섹션 */}
+          {/* 항공편 정보 입력 섹션 */}
           <div className="mb-4 bg-white border border-[#E0E0E0] rounded-xl overflow-hidden shadow-sm">
             <button
               onClick={() => setFlightExpanded(!flightExpanded)}
@@ -274,8 +274,8 @@ export default function DumpPage() {
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-[#EEF2FF] flex items-center justify-center">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M21 16V8C21 7.44772 20.5523 7 20 7H17L14 3H10L7 7H4C3.44772 7 3 7.44772 3 8V16C3 16.5523 3.44772 17 4 17H20C20.5523 17 21 16.5523 21 16Z" stroke="#534AB7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M3 17L6 21H18L21 17" stroke="#534AB7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M21 16V8C21 7.44772 20.5523 7 20 7H17L14 3H10L7 7H4C3.44772 7 3 7.44772 3 8V16C3 16.5523 3.44772 17 4 17H20C20.5523 17 21 16.5523 21 16Z" stroke="#534AB7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M3 17L6 21H18L21 17" stroke="#534AB7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
                 <div className="text-left">
@@ -290,7 +290,7 @@ export default function DumpPage() {
                 fill="none"
                 className={`text-[#888] transition-transform duration-200 ${flightExpanded ? "rotate-180" : ""}`}
               >
-                <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
             {flightExpanded && (
@@ -351,7 +351,7 @@ export default function DumpPage() {
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-[#FEF3C7] flex items-center justify-center">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M3 21H21M4 21V10L12 3L20 10V21M9 21V14H15V21" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M3 21H21M4 21V10L12 3L20 10V21M9 21V14H15V21" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
                 <div className="text-left">
@@ -366,7 +366,7 @@ export default function DumpPage() {
                 fill="none"
                 className={`text-[#888] transition-transform duration-200 ${accommodationExpanded ? "rotate-180" : ""}`}
               >
-                <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
             {accommodationExpanded && (
@@ -384,7 +384,7 @@ export default function DumpPage() {
                             className="text-xs text-[#DC2626] hover:text-[#B91C1C] transition-colors flex items-center gap-1"
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                             </svg>
                             삭제
                           </button>
@@ -439,7 +439,7 @@ export default function DumpPage() {
                     className="w-full py-3 border-2 border-dashed border-[#E0E0E0] rounded-lg text-sm text-[#666] hover:border-[#534AB7] hover:text-[#534AB7] hover:bg-[#F9F8FF] transition-colors flex items-center justify-center gap-2"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                     숙소 추가
                   </button>
@@ -545,11 +545,10 @@ export default function DumpPage() {
             </Link>
             <Link
               href="/places"
-              className={`px-8 py-3 rounded-lg text-[15px] font-semibold transition-all no-underline flex items-center gap-2 ${
-                isValid
+              className={`px-8 py-3 rounded-lg text-[15px] font-semibold transition-all no-underline flex items-center gap-2 ${isValid
                   ? "bg-[#534AB7] text-white hover:bg-[#4840A0] shadow-md shadow-[#534AB7]/20"
                   : "bg-[#E8E8E8] text-[#999] cursor-not-allowed pointer-events-none"
-              }`}
+                }`}
             >
               다음 단계로
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
