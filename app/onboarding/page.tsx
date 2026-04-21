@@ -351,6 +351,7 @@ function MonthSelector({ selectedMonths, onMonthToggle, year, onYearChange }: Mo
 type DateMode = "exact" | "flexible";
 
 export default function OnboardingPage() {
+  const [tripName, setTripName] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [showDrop, setShowDrop] = useState(false);
@@ -445,6 +446,7 @@ export default function OnboardingPage() {
 
   // 초기화 핸들러
   const handleReset = () => {
+    setTripName("");
     setSelected([]);
     setStartDate(null);
     setEndDate(null);
@@ -491,6 +493,23 @@ export default function OnboardingPage() {
               <div className="mb-2">
                 <h1 className="text-2xl font-semibold text-[#1A1A1A]">여행 기본 정보</h1>
                 <p className="mt-2 text-base text-[#888]">어디로, 얼마나, 누구와 떠나시나요?</p>
+              </div>
+
+              {/* 여행 이름 입력 */}
+              <div className="bg-white rounded-2xl border border-[#EBEBEB] p-6 lg:p-8">
+                <div>
+                  <label className="block text-sm font-semibold text-[#1A1A1A] mb-3">
+                    여행 이름
+                  </label>
+                  <input
+                    type="text"
+                    value={tripName}
+                    onChange={(e) => setTripName(e.target.value)}
+                    placeholder="예: 2024 도쿄 가족여행"
+                    className="w-full border border-[#E0E0E0] rounded-xl py-3 px-4 text-base text-[#1A1A1A] bg-white hover:border-[#C0C0C0] focus:border-[#534AB7] focus:outline-none transition-colors placeholder:text-[#999]"
+                  />
+                  <p className="mt-2 text-xs text-[#B0B0B0]">여행을 구분할 수 있는 이름을 자유롭게 입력하세요</p>
+                </div>
               </div>
 
               {/* 여행지 선택 카드 */}

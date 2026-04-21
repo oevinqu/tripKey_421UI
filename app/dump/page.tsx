@@ -100,12 +100,66 @@ function Toast({
   );
 }
 
+interface FlightInfo {
+  id: string;
+  type: "departure" | "return";
+  airport: string;
+  flightNumber: string;
+  time: string;
+}
+
+interface AccommodationInfo {
+  id: string;
+  name: string;
+  location: string;
+  checkIn: string;
+  checkOut: string;
+}
+
 export default function DumpPage() {
   const [text, setText] = useState("");
   const [toast, setToast] = useState({ visible: false, message: "" });
   const [maxReachedShown, setMaxReachedShown] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const currentStep = 2;
+
+  // 항공편 정보
+  const [flightExpanded, setFlightExpanded] = useState(false);
+  const [flights, setFlights] = useState<FlightInfo[]>([
+    { id: "1", type: "departure", airport: "", flightNumber: "", time: "" },
+    { id: "2", type: "return", airport: "", flightNumber: "", time: "" },
+  ]);
+
+  // 숙박 정보
+  const [accommodationExpanded, setAccommodationExpanded] = useState(false);
+  const [accommodations, setAccommodations] = useState<AccommodationInfo[]>([
+    { id: "1", name: "", location: "", checkIn: "", checkOut: "" },
+  ]);
+
+  const updateFlight = (id: string, field: keyof FlightInfo, value: string) => {
+    setFlights((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, [field]: value } : f))
+    );
+  };
+
+  const addAccommodation = () => {
+    setAccommodations((prev) => [
+      ...prev,
+      { id: String(Date.now()), name: "", location: "", checkIn: "", checkOut: "" },
+    ]);
+  };
+
+  const removeAccommodation = (id: string) => {
+    if (accommodations.length > 1) {
+      setAccommodations((prev) => prev.filter((a) => a.id !== id));
+    }
+  };
+
+  const updateAccommodation = (id: string, field: keyof AccommodationInfo, value: string) => {
+    setAccommodations((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, [field]: value } : a))
+    );
+  };
 
   const len = text.length;
   const isValid = len >= 10;
@@ -157,6 +211,13 @@ export default function DumpPage() {
   const handleReset = () => {
     setText("");
     setMaxReachedShown(false);
+    setFlights([
+      { id: "1", type: "departure", airport: "", flightNumber: "", time: "" },
+      { id: "2", type: "return", airport: "", flightNumber: "", time: "" },
+    ]);
+    setAccommodations([
+      { id: "1", name: "", location: "", checkIn: "", checkOut: "" },
+    ]);
     textareaRef.current?.focus();
   };
 
@@ -202,6 +263,189 @@ export default function DumpPage() {
             <p className="text-[#666] text-base lg:text-lg leading-relaxed">
               메모, 카톡 대화, 검색 기록 등 여행과 관련된 정보를 자유롭게 붙여넣어 주세요
             </p>
+          </div>
+
+          {{/* 항공편 정보 입력 섹션 */}
+          <div className="mb-4 bg-white border border-[#E0E0E0] rounded-xl overflow-hidden shadow-sm">
+            <button
+              onClick={() => setFlightExpanded(!flightExpanded)}
+              className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#FAFAFA] transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#EEF2FF] flex items-center justify-center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 16V8C21 7.44772 20.5523 7 20 7H17L14 3H10L7 7H4C3.44772 7 3 7.44772 3 8V16C3 16.5523 3.44772 17 4 17H20C20.5523 17 21 16.5523 21 16Z" stroke="#534AB7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M3 17L6 21H18L21 17" stroke="#534AB7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold text-[#1A1A1A] text-sm">항공편 정보</span>
+                  <span className="text-xs text-[#888] ml-2">(선택)</span>
+                </div>
+              </div>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                className={`text-[#888] transition-transform duration-200 ${flightExpanded ? "rotate-180" : ""}`}
+              >
+                <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            {flightExpanded && (
+              <div className="px-5 pb-5 border-t border-[#F0F0F0]">
+                <div className="pt-4 space-y-4">
+                  {flights.map((flight) => (
+                    <div key={flight.id} className="p-4 bg-[#FAFAFA] rounded-lg border border-[#EBEBEB]">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className={`text-xs font-semibold px-2 py-1 rounded ${flight.type === "departure" ? "bg-[#DBEAFE] text-[#1D4ED8]" : "bg-[#FEE2E2] text-[#DC2626]"}`}>
+                          {flight.type === "departure" ? "출발" : "귀국"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-[#666] mb-1.5">공항</label>
+                          <input
+                            type="text"
+                            placeholder="예: 인천국제공항"
+                            value={flight.airport}
+                            onChange={(e) => updateFlight(flight.id, "airport", e.target.value)}
+                            className="w-full px-3 py-2.5 border border-[#E0E0E0] rounded-lg text-sm bg-white focus:outline-none focus:border-[#534AB7] transition-colors placeholder:text-[#B0B0B0]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-[#666] mb-1.5">항공편</label>
+                          <input
+                            type="text"
+                            placeholder="예: KE123"
+                            value={flight.flightNumber}
+                            onChange={(e) => updateFlight(flight.id, "flightNumber", e.target.value)}
+                            className="w-full px-3 py-2.5 border border-[#E0E0E0] rounded-lg text-sm bg-white focus:outline-none focus:border-[#534AB7] transition-colors placeholder:text-[#B0B0B0]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-[#666] mb-1.5">시간</label>
+                          <input
+                            type="text"
+                            placeholder="예: 09:30"
+                            value={flight.time}
+                            onChange={(e) => updateFlight(flight.id, "time", e.target.value)}
+                            className="w-full px-3 py-2.5 border border-[#E0E0E0] rounded-lg text-sm bg-white focus:outline-none focus:border-[#534AB7] transition-colors placeholder:text-[#B0B0B0]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 숙박 정보 입력 섹션 */}
+          <div className="mb-6 bg-white border border-[#E0E0E0] rounded-xl overflow-hidden shadow-sm">
+            <button
+              onClick={() => setAccommodationExpanded(!accommodationExpanded)}
+              className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#FAFAFA] transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#FEF3C7] flex items-center justify-center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 21H21M4 21V10L12 3L20 10V21M9 21V14H15V21" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold text-[#1A1A1A] text-sm">숙박 정보</span>
+                  <span className="text-xs text-[#888] ml-2">(선택)</span>
+                </div>
+              </div>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                className={`text-[#888] transition-transform duration-200 ${accommodationExpanded ? "rotate-180" : ""}`}
+              >
+                <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            {accommodationExpanded && (
+              <div className="px-5 pb-5 border-t border-[#F0F0F0]">
+                <div className="pt-4 space-y-4">
+                  {accommodations.map((acc, index) => (
+                    <div key={acc.id} className="p-4 bg-[#FAFAFA] rounded-lg border border-[#EBEBEB]">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-semibold px-2 py-1 rounded bg-[#FEF3C7] text-[#92400E]">
+                          숙소 {index + 1}
+                        </span>
+                        {accommodations.length > 1 && (
+                          <button
+                            onClick={() => removeAccommodation(acc.id)}
+                            className="text-xs text-[#DC2626] hover:text-[#B91C1C] transition-colors flex items-center gap-1"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                            삭제
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-[#666] mb-1.5">숙소명</label>
+                          <input
+                            type="text"
+                            placeholder="예: 신주쿠 프린스 호텔"
+                            value={acc.name}
+                            onChange={(e) => updateAccommodation(acc.id, "name", e.target.value)}
+                            className="w-full px-3 py-2.5 border border-[#E0E0E0] rounded-lg text-sm bg-white focus:outline-none focus:border-[#534AB7] transition-colors placeholder:text-[#B0B0B0]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-[#666] mb-1.5">위치</label>
+                          <input
+                            type="text"
+                            placeholder="예: 신주쿠역 도보 5분"
+                            value={acc.location}
+                            onChange={(e) => updateAccommodation(acc.id, "location", e.target.value)}
+                            className="w-full px-3 py-2.5 border border-[#E0E0E0] rounded-lg text-sm bg-white focus:outline-none focus:border-[#534AB7] transition-colors placeholder:text-[#B0B0B0]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-[#666] mb-1.5">체크인</label>
+                          <input
+                            type="text"
+                            placeholder="예: 5월 10일 15:00"
+                            value={acc.checkIn}
+                            onChange={(e) => updateAccommodation(acc.id, "checkIn", e.target.value)}
+                            className="w-full px-3 py-2.5 border border-[#E0E0E0] rounded-lg text-sm bg-white focus:outline-none focus:border-[#534AB7] transition-colors placeholder:text-[#B0B0B0]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-[#666] mb-1.5">체크아웃</label>
+                          <input
+                            type="text"
+                            placeholder="예: 5월 12일 11:00"
+                            value={acc.checkOut}
+                            onChange={(e) => updateAccommodation(acc.id, "checkOut", e.target.value)}
+                            className="w-full px-3 py-2.5 border border-[#E0E0E0] rounded-lg text-sm bg-white focus:outline-none focus:border-[#534AB7] transition-colors placeholder:text-[#B0B0B0]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    onClick={addAccommodation}
+                    className="w-full py-3 border-2 border-dashed border-[#E0E0E0] rounded-lg text-sm text-[#666] hover:border-[#534AB7] hover:text-[#534AB7] hover:bg-[#F9F8FF] transition-colors flex items-center justify-center gap-2"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                    숙소 추가
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* URL 제한 안내 배너 */}
