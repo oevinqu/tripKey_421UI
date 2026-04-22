@@ -21,6 +21,7 @@ interface TripCardProps {
   card: TripCardData;
   onClick?: () => void;
   compact?: boolean;
+  allowExcludedClick?: boolean;
 }
 
 function formatEstimatedDuration(minutes: number | null): string | null {
@@ -34,7 +35,12 @@ function formatEstimatedDuration(minutes: number | null): string | null {
     : `${hours}시간 ${remainingMinutes}분`;
 }
 
-export function TripCard({ card, onClick, compact = false }: TripCardProps) {
+export function TripCard({
+  card,
+  onClick,
+  compact = false,
+  allowExcludedClick = false,
+}: TripCardProps) {
   const classificationColor = CLASSIFICATION_COLORS[card.classification];
   const categoryConfig = CATEGORY_CONFIG[card.category];
   const estimatedDurationLabel = formatEstimatedDuration(card.estimated_duration_min);
@@ -47,7 +53,7 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
     card.placement_status === "ready_partial" ||
     card.placement_status === "blocked" ||
     card.placement_status === "needs_input";
-  const isClickable = canOpenTripCardDetail(card) && !isExcluded;
+  const isClickable = canOpenTripCardDetail(card) && (!isExcluded || allowExcludedClick);
   const disabledReason = getTripCardDetailLockReason(card);
 
   // 카테고리 아이콘 렌더링
@@ -103,7 +109,9 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
       className={`
         relative flex bg-white rounded-xl border overflow-hidden transition-all
         ${isExcluded 
-          ? "opacity-50 cursor-default border-[#E0E0E0] bg-[#F5F5F5]"
+          ? isClickable
+            ? "opacity-70 cursor-pointer border-[#DADADA] bg-[#F5F5F5] hover:border-[#534AB7] hover:shadow-md"
+            : "opacity-50 cursor-default border-[#E0E0E0] bg-[#F5F5F5]"
           : isProcessing
           ? "opacity-70 cursor-not-allowed border-[#E0E0E0]" 
           : "cursor-pointer border-[#EBEBEB] hover:border-[#534AB7] hover:shadow-md"
@@ -256,7 +264,7 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
       </div>
 
       {/* 우측 화살표 (클릭 가능할 때만) */}
-      {isClickable && !isExcluded && (
+      {isClickable && (
         <div className="flex items-center pl-2 text-[#CCCCCC]">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="9,18 15,12 9,6" />

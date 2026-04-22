@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { MainHeader, SubHeader } from "@/components/header";
 import { TripCard } from "@/components/trip/TripCard";
@@ -9,8 +9,8 @@ import { TripCardData } from "@/types/card";
 
 const INITIAL_STOCK_CARDS: TripCardData[] = [
   {
-    instance_id: "stock-1",
-    place_id: "ChIJ123USJ",
+    instance_id: "arr-1",
+    place_id: "osaka-1",
     name: "유니버설 스튜디오 재팬",
     category: "place",
     classification: "confirmed",
@@ -23,21 +23,21 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     is_ai_generated: true,
     estimated_duration_min: 420,
     coordinates: { lat: 34.6654, lng: 135.4323 },
-    time_constraint: "오전 9시 입장 추천",
+    time_constraint: "오전 9시",
     question_text: null,
     options: null,
     blocked_reason: null,
-    user_context: "첫날 핵심 일정으로 계획하고 있어요",
-    tips: "오전 인기 어트랙션부터 이동하면 효율적이에요.",
-    tags: ["테마파크"],
+    user_context: "첫날 핵심 일정이에요",
+    tips: "입장 직후 인기 어트랙션부터 이동하면 좋아요.",
+    tags: ["오사카"],
     source: "ai_summary",
     day: null,
-    notes: "해리포터 월드 꼭 가기",
+    notes: null,
     location: "오사카",
   },
   {
-    instance_id: "stock-2",
-    place_id: "ChIJd8BlQ2kAWDUR4V4rH7j0P7Q",
+    instance_id: "arr-2",
+    place_id: "osaka-2",
     name: "도톤보리 맛집 투어",
     category: "food",
     classification: "confirmed",
@@ -55,16 +55,124 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     options: null,
     blocked_reason: null,
     user_context: null,
-    tips: null,
-    tags: ["맛집"],
+    tips: "저녁 피크 시간을 피하면 대기가 줄어요.",
+    tags: ["오사카"],
     source: "ai_summary",
     day: null,
     notes: null,
-    location: "도톤보리",
+    location: "오사카",
   },
   {
-    instance_id: "stock-3",
-    place_id: "ChIJJ2o6vQJxAWARQJfgf7D4o6E",
+    instance_id: "arr-3",
+    place_id: "osaka-3",
+    name: "오사카성",
+    category: "place",
+    classification: "confirmed",
+    placement_status: "ready",
+    processing_status: "completed",
+    action_type: "review_only",
+    can_exclude: true,
+    allow_duplicate: false,
+    is_excluded: false,
+    is_ai_generated: true,
+    estimated_duration_min: 120,
+    coordinates: { lat: 34.6873, lng: 135.5262 },
+    time_constraint: "오후",
+    question_text: null,
+    options: null,
+    blocked_reason: null,
+    user_context: null,
+    tips: null,
+    tags: ["오사카"],
+    source: "ai_summary",
+    day: null,
+    notes: null,
+    location: "오사카",
+  },
+  {
+    instance_id: "arr-4",
+    place_id: "osaka-4",
+    name: "쿠로몬 시장",
+    category: "food",
+    classification: "confirmed",
+    placement_status: "ready",
+    processing_status: "completed",
+    action_type: "review_only",
+    can_exclude: true,
+    allow_duplicate: false,
+    is_excluded: false,
+    is_ai_generated: true,
+    estimated_duration_min: 90,
+    coordinates: null,
+    time_constraint: "점심 전",
+    question_text: null,
+    options: null,
+    blocked_reason: null,
+    user_context: null,
+    tips: "오후에는 문 닫는 가게가 많아요.",
+    tags: ["오사카"],
+    source: "ai_summary",
+    day: null,
+    notes: null,
+    location: "오사카",
+  },
+  {
+    instance_id: "arr-5",
+    place_id: "osaka-5",
+    name: "하루카스 300 전망대",
+    category: "place",
+    classification: "confirmed",
+    placement_status: "ready",
+    processing_status: "completed",
+    action_type: "review_only",
+    can_exclude: true,
+    allow_duplicate: false,
+    is_excluded: false,
+    is_ai_generated: true,
+    estimated_duration_min: 60,
+    coordinates: null,
+    time_constraint: "해질녘",
+    question_text: null,
+    options: null,
+    blocked_reason: null,
+    user_context: null,
+    tips: null,
+    tags: ["오사카"],
+    source: "ai_summary",
+    day: null,
+    notes: null,
+    location: "오사카",
+  },
+  {
+    instance_id: "arr-6",
+    place_id: "osaka-6",
+    name: "난바 체크인",
+    category: "accommodation",
+    classification: "confirmed",
+    placement_status: "ready",
+    processing_status: "completed",
+    action_type: "review_only",
+    can_exclude: true,
+    allow_duplicate: true,
+    is_excluded: false,
+    is_ai_generated: false,
+    estimated_duration_min: 30,
+    coordinates: null,
+    time_constraint: "16시 이후",
+    question_text: null,
+    options: null,
+    blocked_reason: null,
+    user_context: null,
+    tips: "체크인 전 짐 보관 가능 여부를 확인해보세요.",
+    tags: ["오사카"],
+    source: "booking",
+    day: null,
+    notes: null,
+    location: "오사카",
+  },
+  {
+    instance_id: "arr-7",
+    place_id: "kyoto-1",
     name: "후시미 이나리 신사",
     category: "place",
     classification: "confirmed",
@@ -76,13 +184,13 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     is_excluded: false,
     is_ai_generated: true,
     estimated_duration_min: 180,
-    coordinates: { lat: 34.9671, lng: 135.7727 },
+    coordinates: null,
     time_constraint: "오전",
     question_text: null,
     options: null,
     blocked_reason: null,
     user_context: null,
-    tips: "이른 시간 방문이 좋아요.",
+    tips: "이른 아침이 가장 여유로워요.",
     tags: ["교토"],
     source: "ai_summary",
     day: null,
@@ -90,11 +198,146 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     location: "교토",
   },
   {
-    instance_id: "stock-4",
+    instance_id: "arr-8",
+    place_id: "kyoto-2",
+    name: "기온 거리 산책",
+    category: "activity",
+    classification: "confirmed",
+    placement_status: "ready",
+    processing_status: "completed",
+    action_type: "review_only",
+    can_exclude: true,
+    allow_duplicate: false,
+    is_excluded: false,
+    is_ai_generated: true,
+    estimated_duration_min: 90,
+    coordinates: null,
+    time_constraint: "해질녘",
+    question_text: null,
+    options: null,
+    blocked_reason: null,
+    user_context: null,
+    tips: null,
+    tags: ["교토"],
+    source: "ai_summary",
+    day: null,
+    notes: null,
+    location: "교토",
+  },
+  {
+    instance_id: "arr-9",
+    place_id: "nara-1",
+    name: "나라 사슴공원",
+    category: "activity",
+    classification: "confirmed",
+    placement_status: "ready",
+    processing_status: "completed",
+    action_type: "review_only",
+    can_exclude: true,
+    allow_duplicate: false,
+    is_excluded: false,
+    is_ai_generated: true,
+    estimated_duration_min: 210,
+    coordinates: null,
+    time_constraint: "오후",
+    question_text: null,
+    options: null,
+    blocked_reason: null,
+    user_context: null,
+    tips: "사슴 센베이는 조금씩만 꺼내는 편이 좋아요.",
+    tags: ["나라"],
+    source: "ai_summary",
+    day: null,
+    notes: null,
+    location: "나라",
+  },
+  {
+    instance_id: "arr-10",
+    place_id: null,
+    name: "환전 메모",
+    category: "etc",
+    classification: "confirmed",
+    placement_status: "ready",
+    processing_status: "completed",
+    action_type: "review_only",
+    can_exclude: true,
+    allow_duplicate: true,
+    is_excluded: false,
+    is_ai_generated: false,
+    estimated_duration_min: 20,
+    coordinates: null,
+    time_constraint: "출국 전",
+    question_text: null,
+    options: null,
+    blocked_reason: null,
+    user_context: "현금 결제를 대비해 10만 원 정도 환전하려고 하셨어요",
+    tips: null,
+    tags: ["메모"],
+    source: "user_input",
+    day: null,
+    notes: null,
+    location: undefined,
+  },
+  {
+    instance_id: "arr-11",
+    place_id: null,
+    name: "교토역 → 오사카 이동",
+    category: "transport",
+    classification: "open_question",
+    placement_status: "needs_input",
+    processing_status: "completed",
+    action_type: "input_required",
+    can_exclude: true,
+    allow_duplicate: true,
+    is_excluded: false,
+    is_ai_generated: false,
+    estimated_duration_min: 55,
+    coordinates: null,
+    time_constraint: "저녁 이동",
+    question_text: "이동 수단을 알려주세요.",
+    options: null,
+    blocked_reason: null,
+    user_context: "짐이 많아 환승이 적은 경로를 선호해요",
+    tips: null,
+    tags: ["교통"],
+    source: "user_input",
+    day: null,
+    notes: null,
+    location: "교토",
+  },
+  {
+    instance_id: "arr-12",
+    place_id: null,
+    name: "신사이바시 쇼핑",
+    category: "activity",
+    classification: "open_question",
+    placement_status: "ready_partial",
+    processing_status: "completed",
+    action_type: "input_required",
+    can_exclude: true,
+    allow_duplicate: false,
+    is_excluded: false,
+    is_ai_generated: true,
+    estimated_duration_min: 120,
+    coordinates: null,
+    time_constraint: null,
+    question_text: "쇼핑 예산과 관심 품목을 알려주세요.",
+    options: null,
+    blocked_reason: null,
+    user_context: null,
+    tips: null,
+    tags: ["오사카"],
+    source: "ai_summary",
+    day: null,
+    notes: null,
+    location: "오사카",
+  },
+  {
+    instance_id: "arr-13",
     place_id: null,
     name: "아라시야마 대나무숲",
     category: "place",
-    classification: "open_question",
+    classification: "undecided",
     placement_status: "ready_partial",
     processing_status: "completed",
     action_type: "select_required",
@@ -112,7 +355,7 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     ],
     blocked_reason: null,
     user_context: null,
-    tips: "한낮보다 오전이나 늦은 오후가 더 쾌적해요.",
+    tips: "오전 방문이 더 쾌적해요.",
     tags: ["교토"],
     source: "ai_summary",
     day: null,
@@ -120,61 +363,64 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     location: "교토",
   },
   {
-    instance_id: "stock-5",
+    instance_id: "arr-14",
     place_id: null,
-    name: "교토역 → 오사카 이동",
-    category: "transport",
+    name: "교토 숙소 박수 확인",
+    category: "accommodation",
     classification: "open_question",
-    placement_status: "needs_input",
+    placement_status: "ready_partial",
     processing_status: "completed",
-    action_type: "input_required",
+    action_type: "select_required",
     can_exclude: true,
     allow_duplicate: true,
     is_excluded: false,
     is_ai_generated: false,
-    estimated_duration_min: 55,
+    estimated_duration_min: null,
     coordinates: null,
-    time_constraint: "저녁 이동",
-    question_text: "이동 수단을 알려주세요 (신칸센, 특급열차 등)",
-    options: null,
+    time_constraint: "체크인 전",
+    question_text: "몇 박을 숙박하시겠어요?",
+    options: [
+      { id: "one", label: "1박" },
+      { id: "two", label: "2박" },
+    ],
     blocked_reason: null,
-    user_context: "짐이 많아 환승이 적은 경로를 선호해요",
+    user_context: null,
     tips: null,
-    tags: ["교통"],
-    source: "user_input",
+    tags: ["숙소"],
+    source: "booking",
     day: null,
     notes: null,
-    location: "교토역",
+    location: "교토",
   },
   {
-    instance_id: "stock-6",
+    instance_id: "arr-15",
     place_id: null,
-    name: "나라 사슴공원",
-    category: "activity",
-    classification: "confirmed",
-    placement_status: "ready",
-    processing_status: "completed",
-    action_type: "review_only",
+    name: "오사카성 보정 요청",
+    category: "place",
+    classification: "undecided",
+    placement_status: "blocked",
+    processing_status: "failed",
+    action_type: "fix_required",
     can_exclude: true,
     allow_duplicate: false,
     is_excluded: false,
     is_ai_generated: true,
-    estimated_duration_min: 210,
+    estimated_duration_min: 120,
     coordinates: null,
     time_constraint: null,
-    question_text: null,
+    question_text: "방문 목적이나 희망 시간을 다시 입력해주세요.",
     options: null,
-    blocked_reason: null,
+    blocked_reason: "방문 시간 정보가 누락되었어요",
     user_context: null,
     tips: null,
-    tags: ["나라"],
+    tags: ["오사카"],
     source: "ai_summary",
     day: null,
-    notes: "사슴 센베이 구매",
-    location: "나라",
+    notes: null,
+    location: "오사카",
   },
   {
-    instance_id: "stock-7",
+    instance_id: "arr-16",
     place_id: null,
     name: "금각사 (킨카쿠지)",
     category: "place",
@@ -201,81 +447,27 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     location: "교토",
   },
   {
-    instance_id: "stock-8",
+    instance_id: "arr-17",
     place_id: null,
-    name: "이치란 라멘",
-    category: "food",
-    classification: "confirmed",
-    placement_status: "ready",
-    processing_status: "completed",
-    action_type: "review_only",
-    can_exclude: true,
-    allow_duplicate: false,
-    is_excluded: false,
-    is_ai_generated: true,
-    estimated_duration_min: 60,
-    coordinates: null,
-    time_constraint: "저녁",
-    question_text: null,
-    options: null,
-    blocked_reason: null,
-    user_context: null,
-    tips: null,
-    tags: ["라멘"],
-    source: "ai_summary",
-    day: null,
-    notes: null,
-    location: "도톤보리점",
-  },
-  {
-    instance_id: "stock-9",
-    place_id: "ChIJ4cS1L9gAWDUR4P4LtB3R6CA",
-    name: "오사카성",
-    category: "place",
+    name: "간사이 공항 출발 동선",
+    category: "transport",
     classification: "confirmed",
     placement_status: "ready",
     processing_status: "pending",
     action_type: "review_only",
     can_exclude: true,
-    allow_duplicate: false,
+    allow_duplicate: true,
     is_excluded: false,
     is_ai_generated: true,
-    estimated_duration_min: 120,
-    coordinates: { lat: 34.6873, lng: 135.5262 },
-    time_constraint: null,
+    estimated_duration_min: 70,
+    coordinates: null,
+    time_constraint: "출국 3시간 전",
     question_text: null,
     options: null,
     blocked_reason: null,
     user_context: null,
     tips: null,
-    tags: ["오사카"],
-    source: "ai_summary",
-    day: null,
-    notes: null,
-    location: "오사카",
-  },
-  {
-    instance_id: "stock-10",
-    place_id: null,
-    name: "쿠로몬 시장",
-    category: "food",
-    classification: "open_question",
-    placement_status: "blocked",
-    processing_status: "failed",
-    action_type: "fix_required",
-    can_exclude: true,
-    allow_duplicate: false,
-    is_excluded: false,
-    is_ai_generated: true,
-    estimated_duration_min: 90,
-    coordinates: null,
-    time_constraint: "아침 또는 점심",
-    question_text: "정보 처리 중 오류가 발생했습니다.",
-    options: null,
-    blocked_reason: "방문 시간 정보가 부족해 동선을 만들 수 없어요",
-    user_context: null,
-    tips: null,
-    tags: ["시장"],
+    tags: ["공항"],
     source: "ai_summary",
     day: null,
     notes: null,
@@ -291,11 +483,44 @@ const INITIAL_DAYS = [
   { id: "day5", label: "Day 5", date: "5월 14일 (수)", cards: [] as TripCardData[] },
 ];
 
+const UNAVAILABLE_META = {
+  ready: {
+    title: "ready",
+    description: "위치 정보가 없어 아직 지역 그룹에 올릴 수 없어요",
+  },
+  input_required: {
+    title: "input_required",
+    description: "직접 입력이 필요해 드래그할 수 없어요",
+  },
+  select_required: {
+    title: "select_required",
+    description: "선택이 필요해 드래그할 수 없어요",
+  },
+  fix_required: {
+    title: "fix_required",
+    description: "수정이 필요해 드래그할 수 없어요",
+  },
+  processing: {
+    title: "processing",
+    description: "AI 처리 중이라 완료되면 자동으로 available로 이동해요",
+  },
+} as const;
+
 interface DayColumn {
   id: string;
   label: string;
   date: string;
   cards: TripCardData[];
+}
+
+function chunkCards(cards: TripCardData[], size: number) {
+  const chunks: TripCardData[][] = [];
+
+  for (let index = 0; index < cards.length; index += size) {
+    chunks.push(cards.slice(index, index + size));
+  }
+
+  return chunks;
 }
 
 export default function ArrangePage() {
@@ -313,7 +538,57 @@ export default function ArrangePage() {
   const progress = totalCards > 0 ? Math.round((placedCardsCount / totalCards) * 100) : 0;
 
   const canDrag = (card: TripCardData) =>
-    card.placement_status !== "blocked" && card.placement_status !== "needs_input";
+    card.placement_status === "ready" &&
+    card.processing_status === "completed" &&
+    card.action_type === "review_only";
+
+  const stockSections = useMemo(() => {
+    const availableCards = stockCards.filter(
+      (card) =>
+        card.placement_status === "ready" &&
+        card.processing_status === "completed" &&
+        card.action_type === "review_only" &&
+        Boolean(card.location)
+    );
+
+    const availableByLocation = availableCards.reduce<Record<string, TripCardData[]>>(
+      (accumulator, card) => {
+        const key = card.location ?? "기타";
+        accumulator[key] = [...(accumulator[key] ?? []), card];
+        return accumulator;
+      },
+      {}
+    );
+
+    const availableGroups = Object.entries(availableByLocation).flatMap(([location, cards]) =>
+      chunkCards(cards, 5).map((chunk, index) => ({
+        id: `${location}-${index + 1}`,
+        title: cards.length > 5 ? `${location} ${index + 1}` : location,
+        cards: chunk,
+      }))
+    );
+
+    return {
+      available: availableGroups,
+      unavailable: {
+        ready: stockCards.filter(
+          (card) =>
+            card.placement_status === "ready" &&
+            card.processing_status === "completed" &&
+            card.action_type === "review_only" &&
+            !card.location
+        ),
+        input_required: stockCards.filter((card) => card.action_type === "input_required"),
+        select_required: stockCards.filter((card) => card.action_type === "select_required"),
+        fix_required: stockCards.filter((card) => card.action_type === "fix_required"),
+        processing: stockCards.filter(
+          (card) =>
+            card.processing_status === "pending" ||
+            card.processing_status === "processing"
+        ),
+      },
+    };
+  }, [stockCards]);
 
   const handleDragStart = (card: TripCardData, source: string) => {
     if (!canDrag(card)) return;
@@ -447,6 +722,101 @@ export default function ArrangePage() {
     return () => clearInterval(interval);
   }, []);
 
+  const renderStockCard = (card: TripCardData, source: string) => {
+    const isBlocked = card.placement_status === "blocked";
+    const isNeedsInput = card.placement_status === "needs_input";
+    const isProcessing =
+      card.processing_status === "pending" || card.processing_status === "processing";
+    const isDraggable = canDrag(card);
+
+    return (
+      <div
+        key={card.instance_id}
+        draggable={isDraggable}
+        onDragStart={() => handleDragStart(card, source)}
+        onDragEnd={handleDragEnd}
+        className={`relative ${isDraggable ? "cursor-grab active:cursor-grabbing" : isProcessing ? "" : "opacity-90"}`}
+      >
+        <TripCard card={card} onClick={() => handleCardClick(card)} compact />
+
+        {isDraggable && (
+          <div className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded bg-[#F5F5F5] opacity-60">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
+              <circle cx="9" cy="5" r="1" />
+              <circle cx="9" cy="12" r="1" />
+              <circle cx="9" cy="19" r="1" />
+              <circle cx="15" cy="5" r="1" />
+              <circle cx="15" cy="12" r="1" />
+              <circle cx="15" cy="19" r="1" />
+            </svg>
+          </div>
+        )}
+
+        {isNeedsInput && (
+          <div
+            className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-xl bg-white/60 transition-colors hover:bg-white/40"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCardClick(card);
+            }}
+          >
+            <div className="flex flex-col items-center gap-1">
+              <span className="rounded-lg border border-[#FED7AA] bg-[#FFEDD5] px-3 py-1.5 text-xs font-semibold text-[#EA580C] shadow-sm">
+                입력 필요
+              </span>
+              <span className="text-[10px] text-[#EA580C]">클릭하여 입력하기</span>
+            </div>
+          </div>
+        )}
+
+        {card.action_type === "select_required" && (
+          <div
+            className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-xl bg-white/60 transition-colors hover:bg-white/40"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCardClick(card);
+            }}
+          >
+            <div className="flex flex-col items-center gap-1">
+              <span className="rounded-lg border border-[#FDE68A] bg-[#FEF3C7] px-3 py-1.5 text-xs font-semibold text-[#B45309] shadow-sm">
+                선택 필요
+              </span>
+              <span className="text-[10px] text-[#B45309]">클릭하여 선택하기</span>
+            </div>
+          </div>
+        )}
+
+        {isBlocked && (
+          <div
+            className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-xl bg-white/60 transition-colors hover:bg-white/40"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCardClick(card);
+            }}
+          >
+            <div className="flex flex-col items-center gap-1">
+              <span className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-3 py-1.5 text-xs font-semibold text-[#DC2626] shadow-sm">
+                해결 필요
+              </span>
+              <span className="text-[10px] text-[#DC2626]">클릭하여 수정하기</span>
+            </div>
+          </div>
+        )}
+
+        {isProcessing && (
+          <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/65">
+            <div className="flex flex-col items-center gap-1">
+              <span className="rounded-lg border border-[#C7D2FE] bg-[#EEF2FF] px-3 py-1.5 text-xs font-semibold text-[#534AB7] shadow-sm">
+                처리 중
+              </span>
+              <span className="text-[10px] text-[#534AB7]">완료되면 자동 이동</span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-[#F5F5F3] font-sans">
       <MainHeader />
@@ -464,7 +834,7 @@ export default function ArrangePage() {
         <div className="mx-auto flex max-w-[1600px] items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold text-[#1A1A1A]">일정 배치</h1>
-            <p className="mt-1 text-sm text-[#888]">카드를 드래그하여 원하는 날짜에 배치하세요</p>
+            <p className="mt-1 text-sm text-[#888]">available/unavailable 구조로 배치 가능한 카드를 정리했어요</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
@@ -483,7 +853,7 @@ export default function ArrangePage() {
 
       <div className="flex flex-1 overflow-hidden">
         <div
-          className="flex w-80 flex-col border-r border-[#EBEBEB] bg-white"
+          className="flex w-[28rem] flex-col border-r border-[#EBEBEB] bg-white"
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDropOnStock}
         >
@@ -492,84 +862,77 @@ export default function ArrangePage() {
               <h2 className="font-semibold text-[#1A1A1A]">보관함</h2>
               <span className="text-sm text-[#888]">{stockCards.length}개</span>
             </div>
-            <p className="mt-1 text-xs text-[#999]">배치할 카드를 오른쪽으로 드래그하세요</p>
+            <p className="mt-1 text-xs text-[#999]">available은 지역별로, unavailable은 상태별로 나누어 보여줍니다</p>
           </div>
 
-          <div className="flex-1 space-y-3 overflow-y-auto p-4">
-            {stockCards.map((card) => {
-              const isBlocked = card.placement_status === "blocked";
-              const isNeedsInput = card.placement_status === "needs_input";
-              const isDraggable = canDrag(card);
-
-              return (
-                <div
-                  key={card.instance_id}
-                  draggable={isDraggable}
-                  onDragStart={() => handleDragStart(card, "stock")}
-                  onDragEnd={handleDragEnd}
-                  className={`relative ${isDraggable ? "cursor-grab active:cursor-grabbing" : "opacity-60"}`}
-                >
-                  <TripCard card={card} onClick={() => handleCardClick(card)} compact />
-
-                  {isDraggable && (
-                    <div className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded bg-[#F5F5F5] opacity-60">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
-                        <circle cx="9" cy="5" r="1" />
-                        <circle cx="9" cy="12" r="1" />
-                        <circle cx="9" cy="19" r="1" />
-                        <circle cx="15" cy="5" r="1" />
-                        <circle cx="15" cy="12" r="1" />
-                        <circle cx="15" cy="19" r="1" />
-                      </svg>
-                    </div>
-                  )}
-
-                  {isBlocked && (
-                    <div
-                      className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-xl bg-white/60 transition-colors hover:bg-white/40"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCardClick(card);
-                      }}
-                    >
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-3 py-1.5 text-xs font-semibold text-[#DC2626] shadow-sm">
-                          해결 필요
-                        </span>
-                        <span className="text-[10px] text-[#DC2626]">클릭하여 해결하기</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {isNeedsInput && (
-                    <div
-                      className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-xl bg-white/60 transition-colors hover:bg-white/40"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCardClick(card);
-                      }}
-                    >
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="rounded-lg border border-[#FED7AA] bg-[#FFEDD5] px-3 py-1.5 text-xs font-semibold text-[#EA580C] shadow-sm">
-                          입력 필요
-                        </span>
-                        <span className="text-[10px] text-[#EA580C]">클릭하여 입력하기</span>
-                      </div>
-                    </div>
-                  )}
+          <div className="flex-1 space-y-6 overflow-y-auto p-4">
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-[#1A1A1A]">available</h3>
+                  <p className="text-xs text-[#888]">즉시 배치 가능한 카드</p>
                 </div>
-              );
-            })}
-
-            {stockCards.length === 0 && (
-              <div className="py-12 text-center text-[#999]">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="mx-auto mb-3 opacity-40">
-                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-                  <path d="M22 4L12 14.01l-3-3" />
-                </svg>
-                <p className="text-sm">모든 카드가 배치되었습니다!</p>
+                <span className="rounded-full bg-[#EEF2FF] px-2.5 py-1 text-xs font-medium text-[#534AB7]">
+                  {stockSections.available.reduce((sum, group) => sum + group.cards.length, 0)}개
+                </span>
               </div>
-            )}
+
+              {stockSections.available.length > 0 ? (
+                stockSections.available.map((group) => (
+                  <div key={group.id} className="rounded-2xl border border-[#E8E8E8] bg-[#FAFAFA] p-3">
+                    <div className="mb-3 flex items-center justify-between">
+                      <h4 className="text-sm font-semibold text-[#1A1A1A]">{group.title}</h4>
+                      <span className="text-xs text-[#888]">{group.cards.length}개</span>
+                    </div>
+                    <div className="space-y-3">
+                      {group.cards.map((card) => renderStockCard(card, "stock"))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[#D8D8D8] bg-[#FAFAFA] p-4 text-xs text-[#888]">
+                  현재 available 조건을 만족하는 카드가 없어요.
+                </div>
+              )}
+            </section>
+
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-[#1A1A1A]">unavailable</h3>
+                  <p className="text-xs text-[#888]">지금은 바로 배치할 수 없는 카드</p>
+                </div>
+                <span className="rounded-full bg-[#F3F4F6] px-2.5 py-1 text-xs font-medium text-[#6B7280]">
+                  {Object.values(stockSections.unavailable).reduce((sum, cards) => sum + cards.length, 0)}개
+                </span>
+              </div>
+
+              {Object.entries(UNAVAILABLE_META).map(([key, meta]) => {
+                const cards = stockSections.unavailable[key as keyof typeof stockSections.unavailable];
+
+                return (
+                  <div key={key} className="rounded-2xl border border-[#E8E8E8] bg-[#FCFCFC] p-3">
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-semibold text-[#1A1A1A]">{meta.title}</h4>
+                        <span className="text-xs text-[#888]">{cards.length}개</span>
+                      </div>
+                      <p className="mt-1 text-xs text-[#888]">{meta.description}</p>
+                    </div>
+
+                    {cards.length > 0 ? (
+                      <div className="space-y-3">
+                        {cards.map((card) => renderStockCard(card, "stock"))}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-[#E5E5E5] bg-white px-3 py-4 text-xs text-[#AAA]">
+                        이 섹션에는 아직 카드가 없어요.
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </section>
           </div>
         </div>
 
