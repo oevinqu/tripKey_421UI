@@ -7,7 +7,7 @@ import Link from "next/link";
 export const STEPS = [
   { id: 1, label: "온보딩", path: "/onboarding" },
   { id: 2, label: "덤프", path: "/dump" },
-  { id: 3, label: "장소선택", path: "/places" },
+  { id: 3, label: "정리", path: "/organize" },
   { id: 4, label: "배치", path: "/arrange" },
   { id: 5, label: "확정", path: "/" },
 ];
