@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MainHeader, SubHeader } from "@/components/header";
 import { TripCard, TripCardSkeleton } from "@/components/trip/TripCard";
 import { TripCardDetailPanel } from "@/components/trip/TripCardDetailPanel";
+import { canOpenTripCardDetail } from "@/components/trip/tripCardState";
 import { TripCardData, CardGroup } from "@/types/card";
 
 // 데모 데이터 - 모든 상태 조합을 확인할 수 있도록 구성
@@ -284,8 +285,7 @@ export default function OrganizePage() {
   }, [cards]);
 
   const handleCardClick = (card: TripCardData) => {
-    // processing 상태일 때는 클릭 불가
-    if (card.processing_status === "processing") return;
+    if (!canOpenTripCardDetail(card)) return;
     setSelectedCard(card);
     setPanelOpen(true);
   };
