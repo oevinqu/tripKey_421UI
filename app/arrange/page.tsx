@@ -248,7 +248,7 @@ export default function ArrangePage() {
     setSelectedCard(updatedCard);
   };
 
-  // Polling 시뮬레이션: processing 상태인 카드들의 상태 변화
+  // Polling 시���레이션: processing 상태인 카드들의 상태 변화
   useEffect(() => {
     const interval = setInterval(() => {
       const updateProcessingCards = (cards: TripCardData[]) =>
@@ -358,14 +358,23 @@ export default function ArrangePage() {
                     </div>
                   )}
 
-                  {/* Blocked 상태 표시 */}
-                  {isBlocked && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/50 rounded-xl">
-                      <span className="text-xs font-medium text-[#DC2626] bg-[#FEE2E2] px-2 py-1 rounded">
-                        해결 필요
-                      </span>
-                    </div>
-                  )}
+{/* Blocked 상태 표시 - 클릭하여 해결 가능 */}
+                                  {isBlocked && (
+                                    <div 
+                                      className="absolute inset-0 flex items-center justify-center bg-white/60 rounded-xl cursor-pointer hover:bg-white/40 transition-colors"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCardClick(card);
+                                      }}
+                                    >
+                                      <div className="flex flex-col items-center gap-1">
+                                        <span className="text-xs font-semibold text-[#DC2626] bg-[#FEE2E2] px-3 py-1.5 rounded-lg border border-[#FECACA] shadow-sm">
+                                          해결 필요
+                                        </span>
+                                        <span className="text-[10px] text-[#DC2626]">클릭하여 해결하기</span>
+                                      </div>
+                                    </div>
+                                  )}
                 </div>
               );
             })}

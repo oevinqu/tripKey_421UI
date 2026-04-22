@@ -48,8 +48,12 @@ export function TripCardDetailPanel({
     };
 
     // 자유 입력창 내용을 notes에 저장
-    if ((card.action_type === "input_required" || card.action_type === "select_required") && inputValue) {
+    if ((card.action_type === "input_required" || card.action_type === "select_required" || card.action_type === "fix_required") && inputValue) {
       updatedCard.notes = inputValue;
+      // 실패 상태였다면 처리 상태도 초기화
+      if (card.processing_status === "failed") {
+        updatedCard.processing_status = "idle";
+      }
     }
 
     onUpdateCard(updatedCard);
@@ -213,18 +217,60 @@ export function TripCardDetailPanel({
             </div>
           )}
 
+          {/* 해결 필요 알림 (blocked 상태) */}
+          {card.placement_status === "blocked" && (
+            <div className="bg-[#FEE2E2] rounded-xl p-4 border border-[#FECACA]">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#DC2626] flex items-center justify-center flex-shrink-0">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-bold text-[#DC2626] mb-1">해결이 필요합니다</h4>
+                  <p className="text-sm text-[#991B1B] leading-relaxed">
+                    이 항목은 필수 정보가 누락되어 일정에 배치할 수 없습니다. 아래 질문에 답변해주시면 배치가 가능해집니다.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 부분 준비 알림 (ready_partial 상태) */}
+          {card.placement_status === "ready_partial" && (
+            <div className="bg-[#FEF3C7] rounded-xl p-4 border border-[#FCD34D]">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#F59E0B] flex items-center justify-center flex-shrink-0">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3m.08 4h.01" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-bold text-[#92400E] mb-1">추가 정보가 필요합니다</h4>
+                  <p className="text-sm text-[#78350F] leading-relaxed">
+                    배치는 가능하지만, 아래 질문에 답변해주시면 더 정확한 일정을 만들 수 있습니다.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 질문/액션 섹션 */}
           {card.classification !== "confirmed" && (
-            <div className="border-t border-[#EBEBEB] pt-6">
+            <div className="border-t border-[#EBEBEB] pt-6 mt-6">
               {/* 질문 표시 */}
               {card.question_text && (
-                <div className="mb-4 p-4 bg-[#FEF3C7] rounded-xl">
+                <div className="mb-4 p-4 bg-[#F3F1FE] rounded-xl border border-[#E8E6F5]">
                   <div className="flex items-start gap-2">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" className="shrink-0 mt-0.5">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" className="shrink-0 mt-0.5">
                       <circle cx="12" cy="12" r="10" />
                       <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3m.08 4h.01" />
                     </svg>
-                    <p className="text-sm text-[#92400E] font-medium">{card.question_text}</p>
+                    <div>
+                      <p className="text-xs text-[#534AB7] font-medium mb-1">질문</p>
+                      <p className="text-sm text-[#3D3592] font-medium">{card.question_text}</p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -268,10 +314,50 @@ export function TripCardDetailPanel({
 
               {/* 수정 필요 메시지 (fix_required) */}
               {card.action_type === "fix_required" && (
-                <div className="p-4 bg-[#FEE2E2] rounded-xl">
-                  <p className="text-sm text-[#DC2626]">
-                    이 항목은 수정이 필요합니다. 정보를 확인하고 수정해주세요.
-                  </p>
+                <div className="space-y-3">
+                  <div className="p-4 bg-[#FEE2E2] rounded-xl border border-[#FECACA]">
+                    <div className="flex items-start gap-2">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" className="shrink-0 mt-0.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M15 9l-6 6M9 9l6 6" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-[#DC2626] mb-1">처리 중 오류가 발생했습니다</p>
+                        <p className="text-xs text-[#991B1B]">
+                          아래에 올바른 정보를 입력해주시면 다시 처리를 시도합니다.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <textarea
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    placeholder="수정할 내용을 입력해주세요..."
+                    className="w-full p-4 border border-[#E0E0E0] rounded-xl text-sm resize-none focus:outline-none focus:border-[#534AB7] focus:ring-2 focus:ring-[#534AB7]/20 transition-all bg-white"
+                    rows={4}
+                  />
+                </div>
+              )}
+
+              {/* 처리 상태 표시 */}
+              {card.processing_status === "processing" && (
+                <div className="p-4 bg-[#EEF2FF] rounded-xl border border-[#C7D2FE]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 border-2 border-[#534AB7] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm text-[#534AB7] font-medium">AI가 정보를 처리하고 있습니다...</p>
+                  </div>
+                </div>
+              )}
+
+              {card.processing_status === "pending" && (
+                <div className="p-4 bg-[#FEF3C7] rounded-xl border border-[#FCD34D]">
+                  <div className="flex items-center gap-3">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12,6 12,12 16,14" />
+                    </svg>
+                    <p className="text-sm text-[#92400E] font-medium">처리 대기 중입니다</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -291,7 +377,7 @@ export function TripCardDetailPanel({
               <button
                 onClick={handleConfirm}
                 disabled={
-                  (card.action_type === "input_required" || card.action_type === "select_required") && !inputValue
+                  (card.action_type === "input_required" || card.action_type === "select_required" || card.action_type === "fix_required") && !inputValue
                 }
                 className="flex-1 py-3 px-4 rounded-xl bg-[#534AB7] text-sm font-semibold text-white hover:bg-[#4840A0] transition-colors disabled:bg-[#E0E0E0] disabled:text-[#999] disabled:cursor-not-allowed"
               >
