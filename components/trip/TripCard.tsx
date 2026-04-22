@@ -110,6 +110,30 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
               {renderCategoryIcon()}
               {categoryConfig.label}
             </span>
+
+            {/* 처리 상태 배지 */}
+            {card.processing_status === "processing" && (
+              <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-[#EEF2FF] text-[#534AB7]">
+                <div className="w-2 h-2 border border-[#534AB7] border-t-transparent rounded-full animate-spin" />
+                처리 중
+              </span>
+            )}
+            {card.processing_status === "pending" && (
+              <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#92400E]">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="12" r="10" />
+                </svg>
+                대기 중
+              </span>
+            )}
+            {card.processing_status === "failed" && (
+              <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-[#FEE2E2] text-[#DC2626]">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+                실패
+              </span>
+            )}
           </div>
 
           {/* 경고/주의 아이콘 */}

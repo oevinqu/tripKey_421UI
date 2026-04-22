@@ -47,15 +47,9 @@ export function TripCardDetailPanel({
       action_type: "review_only",
     };
 
-    if (card.action_type === "input_required" && inputValue) {
+    // 자유 입력창 내용을 notes에 저장
+    if ((card.action_type === "input_required" || card.action_type === "select_required") && inputValue) {
       updatedCard.notes = inputValue;
-    }
-
-    if (card.action_type === "select_required" && selectedOption) {
-      const selected = card.options?.find((o) => o.id === selectedOption);
-      if (selected) {
-        updatedCard.notes = selected.label;
-      }
     }
 
     onUpdateCard(updatedCard);
@@ -235,8 +229,8 @@ export function TripCardDetailPanel({
                 </div>
               )}
 
-              {/* 입력 필드 (input_required) */}
-              {card.action_type === "input_required" && (
+              {/* 자유 입력창 - 질문에 대한 답변 */}
+              {(card.action_type === "input_required" || card.action_type === "select_required") && (
                 <div className="space-y-3">
                   <label className="block text-sm font-medium text-[#1A1A1A]">
                     답변 입력
@@ -244,47 +238,31 @@ export function TripCardDetailPanel({
                   <textarea
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="답변을 입력해주세요..."
-                    className="w-full p-3 border border-[#E0E0E0] rounded-xl text-sm resize-none focus:outline-none focus:border-[#534AB7] transition-colors"
-                    rows={3}
+                    placeholder="자유롭게 답변을 입력해주세요..."
+                    className="w-full p-4 border border-[#E0E0E0] rounded-xl text-sm resize-none focus:outline-none focus:border-[#534AB7] focus:ring-2 focus:ring-[#534AB7]/20 transition-all bg-white"
+                    rows={4}
                   />
-                </div>
-              )}
+                  <p className="text-xs text-[#999]">
+                    질문에 대한 답변을 자유롭게 작성해주세요. 작성 후 확정하기를 누르면 반영됩니다.
+                  </p>
 
-              {/* 선택 옵션 (select_required) */}
-              {card.action_type === "select_required" && card.options && (
-                <div className="space-y-3">
-                  <label className="block text-sm font-medium text-[#1A1A1A]">
-                    옵션 선택
-                  </label>
-                  <div className="space-y-2">
-                    {card.options.map((option) => (
-                      <button
-                        key={option.id}
-                        onClick={() => setSelectedOption(option.id)}
-                        className={`w-full p-3 text-left text-sm rounded-xl border transition-all ${
-                          selectedOption === option.id
-                            ? "border-[#534AB7] bg-[#F3F1FE] text-[#534AB7]"
-                            : "border-[#E0E0E0] hover:border-[#C0C0C0] text-[#1A1A1A]"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                              selectedOption === option.id
-                                ? "border-[#534AB7]"
-                                : "border-[#CCCCCC]"
-                            }`}
+                  {/* 선택지가 있는 경우 힌트로 표시 */}
+                  {card.options && card.options.length > 0 && (
+                    <div className="mt-3 p-3 bg-[#F5F5F5] rounded-lg">
+                      <p className="text-xs text-[#666] mb-2">참고할 수 있는 옵션:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {card.options.map((option) => (
+                          <button
+                            key={option.id}
+                            onClick={() => setInputValue(option.label)}
+                            className="text-xs px-3 py-1.5 bg-white border border-[#E0E0E0] rounded-lg hover:border-[#534AB7] hover:text-[#534AB7] transition-colors"
                           >
-                            {selectedOption === option.id && (
-                              <div className="w-2 h-2 rounded-full bg-[#534AB7]" />
-                            )}
-                          </div>
-                          {option.label}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -313,8 +291,7 @@ export function TripCardDetailPanel({
               <button
                 onClick={handleConfirm}
                 disabled={
-                  (card.action_type === "input_required" && !inputValue) ||
-                  (card.action_type === "select_required" && !selectedOption)
+                  (card.action_type === "input_required" || card.action_type === "select_required") && !inputValue
                 }
                 className="flex-1 py-3 px-4 rounded-xl bg-[#534AB7] text-sm font-semibold text-white hover:bg-[#4840A0] transition-colors disabled:bg-[#E0E0E0] disabled:text-[#999] disabled:cursor-not-allowed"
               >
