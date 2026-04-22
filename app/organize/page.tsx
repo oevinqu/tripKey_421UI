@@ -2,8 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { MainHeader } from "@/components/header";
-// import { SubHeader } from "@/components/sub-header";
+import { MainHeader, SubHeader } from "@/components/header";
 import { TripCard, TripCardSkeleton } from "@/components/trip/TripCard";
 import { TripCardDetailPanel } from "@/components/trip/TripCardDetailPanel";
 import { TripCardData, CardGroup } from "@/types/card";
