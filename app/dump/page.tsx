@@ -116,6 +116,12 @@ interface AccommodationInfo {
   checkOut: string;
 }
 
+interface LinkInfo {
+  id: string;
+  url: string;
+  description: string;
+}
+
 export default function DumpPage() {
   const [text, setText] = useState("");
   const [toast, setToast] = useState({ visible: false, message: "" });
@@ -134,6 +140,12 @@ export default function DumpPage() {
   const [accommodationExpanded, setAccommodationExpanded] = useState(false);
   const [accommodations, setAccommodations] = useState<AccommodationInfo[]>([
     { id: "1", name: "", location: "", checkIn: "", checkOut: "" },
+  ]);
+
+  // 링크 정보
+  const [linkExpanded, setLinkExpanded] = useState(false);
+  const [links, setLinks] = useState<LinkInfo[]>([
+    { id: "1", url: "", description: "" },
   ]);
 
   const updateFlight = (id: string, field: keyof FlightInfo, value: string) => {
@@ -158,6 +170,25 @@ export default function DumpPage() {
   const updateAccommodation = (id: string, field: keyof AccommodationInfo, value: string) => {
     setAccommodations((prev) =>
       prev.map((a) => (a.id === id ? { ...a, [field]: value } : a))
+    );
+  };
+
+  const addLink = () => {
+    setLinks((prev) => [
+      ...prev,
+      { id: String(Date.now()), url: "", description: "" },
+    ]);
+  };
+
+  const removeLink = (id: string) => {
+    if (links.length > 1) {
+      setLinks((prev) => prev.filter((l) => l.id !== id));
+    }
+  };
+
+  const updateLink = (id: string, field: keyof LinkInfo, value: string) => {
+    setLinks((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, [field]: value } : l))
     );
   };
 
@@ -218,6 +249,9 @@ export default function DumpPage() {
     setAccommodations([
       { id: "1", name: "", location: "", checkIn: "", checkOut: "" },
     ]);
+    setLinks([
+      { id: "1", url: "", description: "" },
+    ]);
     textareaRef.current?.focus();
   };
 
@@ -225,7 +259,7 @@ export default function DumpPage() {
     len >= 3000 ? "text-[#DC2626]" : len >= 2700 ? "text-[#F59E0B]" : "text-[#888]";
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex flex-col">
+    <div className="min-h-screen bg-[#F5F5F3] font-sans flex flex-col">
       {/* 메인 헤더 */}
       <MainHeader />
 
@@ -241,32 +275,31 @@ export default function DumpPage() {
         rightButtons={
           <button
             onClick={handleReset}
-            className="px-4 py-2 rounded-lg border border-[#E0E0E0] bg-white text-[#666] text-[13px] hover:bg-[#F5F5F5] transition-colors flex items-center gap-2"
+            className="px-4 py-2 text-sm font-medium text-[#666] border border-[#E0E0E0] rounded-lg hover:bg-[#F8F8F8] transition-colors bg-white cursor-pointer"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M1 4V10H7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M3.51 15C4.15 17.54 5.85 19.61 8.17 20.68C10.5 21.75 13.2 21.73 15.5 20.64C17.8 19.55 19.49 17.48 20.13 14.96C20.77 12.44 20.31 9.76 18.87 7.57C17.44 5.38 15.14 3.87 12.55 3.45C9.96 3.03 7.32 3.73 5.28 5.38L1 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
             초기화
           </button>
         }
       />
 
-      {/* 메인 컨텐츠 */}
-      <main className="flex-1 px-8 lg:px-12 py-10 overflow-auto">
-        <div className="max-w-4xl mx-auto">
-          {/* 타이틀 섹션 */}
-          <div className="mb-8">
-            <h1 className="text-2xl lg:text-3xl font-bold text-[#1A1A1A] mb-3">
-              정보를 던지세요
-            </h1>
-            <p className="text-[#666] text-base lg:text-lg leading-relaxed">
-              메모, 카톡 대화, 검색 기록 등 여행과 관련된 정보를 자유롭게 붙여넣어 주세요
-            </p>
-          </div>
+      {/* 메인 콘텐츠 영역 - 2컬럼 레이아웃 */}
+      <div className="flex-1 px-8 lg:px-12 py-10">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* 왼쪽: 메인 폼 영역 (2/3) */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* 페이지 타이틀 */}
+              <div className="mb-2">
+                <h1 className="text-2xl font-semibold text-[#1A1A1A]">정보를 던지세요</h1>
+                <p className="mt-2 text-base text-[#888]">메모, 카톡 대화, 검색 기록 등 여행과 관련된 정보를 자유롭게 붙여넣어 주세요</p>
+              </div>
 
-          {/* 항공편 정보 입력 섹션 */}
-          <div className="mb-4 bg-white border border-[#E0E0E0] rounded-xl overflow-hidden shadow-sm">
+          {/* 보조 정보 입력 카드 */}
+              <div className="bg-white rounded-2xl border border-[#EBEBEB] p-6 lg:p-8">
+                <h2 className="text-sm font-semibold text-[#1A1A1A] mb-4">보조 정보 (선택)</h2>
+
+                {/* 항공편 정보 입력 섹션 */}
+                <div className="mb-4 border border-[#E0E0E0] rounded-xl overflow-hidden">
             <button
               onClick={() => setFlightExpanded(!flightExpanded)}
               className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#FAFAFA] transition-colors"
@@ -343,7 +376,7 @@ export default function DumpPage() {
           </div>
 
           {/* 숙박 정보 입력 섹션 */}
-          <div className="mb-6 bg-white border border-[#E0E0E0] rounded-xl overflow-hidden shadow-sm">
+                <div className="border border-[#E0E0E0] rounded-xl overflow-hidden">
             <button
               onClick={() => setAccommodationExpanded(!accommodationExpanded)}
               className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#FAFAFA] transition-colors"
@@ -446,47 +479,35 @@ export default function DumpPage() {
                 </div>
               </div>
             )}
-          </div>
+                </div>
+              </div>
 
-          {/* URL 제한 안내 배너 */}
-          <div className="mb-6 bg-[#FEF3C7] border border-[#FCD34D] rounded-xl p-4 flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#F59E0B] flex items-center justify-center shrink-0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="2" />
-                <path d="M12 8V12M12 16H12.01" stroke="white" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-[#92400E] font-semibold text-sm mb-1">URL/링크는 입력할 수 없어요</p>
-              <p className="text-[#A16207] text-sm leading-relaxed">
-                AI가 링크 내용을 직접 읽을 수 없기 때문에, 링크 대신 해당 내용을 텍스트로 복사해서 붙여넣어 주세요.
-                예: 블로그 글의 장소명, 영업시간, 주소 등을 직접 적어주시면 됩니다.
-              </p>
-            </div>
-          </div>
-
-          {/* 텍스트 입력 영역 */}
-          <div className="mb-6">
-            <div className="bg-white border border-[#E0E0E0] rounded-xl overflow-hidden hover:border-[#534AB7] transition-colors focus-within:border-[#534AB7] focus-within:ring-2 focus-within:ring-[#534AB7]/20 shadow-sm">
-              <textarea
+              {/* 텍스트 입력 카드 */}
+              <div className="bg-white rounded-2xl border border-[#EBEBEB] p-6 lg:p-8">
+                <label className="block text-sm font-semibold text-[#1A1A1A] mb-3">
+                  여행 정보 <span className="text-[#E24B4A]">*</span>
+                </label>
+                <div className="border border-[#E0E0E0] rounded-xl overflow-hidden hover:border-[#534AB7] transition-colors focus-within:border-[#534AB7] focus-within:ring-2 focus-within:ring-[#534AB7]/20">
+                  <textarea
                 ref={textareaRef}
                 value={text}
                 onChange={handleChange}
                 onPaste={handlePaste}
                 maxLength={3000}
                 placeholder={PLACEHOLDER}
-                className="w-full min-h-[280px] lg:min-h-[320px] p-6 text-[15px] leading-relaxed text-[#1A1A1A] bg-transparent resize-none outline-none placeholder:text-[#B0B0B0]"
-              />
-              <div className="flex justify-end px-6 pb-4">
-                <span className={`text-sm font-medium ${charCountColor}`}>
-                  {len.toLocaleString()}/3,000
-                </span>
+                className="w-full min-h-[280px] lg:min-h-[320px] p-6 text-[15px] leading-relaxed text-[#1A1A1A] bg-white resize-none outline-none placeholder:text-[#B0B0B0]"
+                  />
+                  <div className="flex justify-end px-6 pb-4 bg-white">
+                    <span className={`text-sm font-medium ${charCountColor}`}>
+                      {len.toLocaleString()}/3,000
+                    </span>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-[#B0B0B0]">메모, 카톡 대화, 검색 기록 등을 자유롭게 붙여넣어 주세요 (최소 10자 이상)</p>
               </div>
-            </div>
-          </div>
 
           {/* AI 태그 섹션 */}
-          <div className="mb-6 bg-white border border-[#E8E8E8] rounded-xl p-5 shadow-sm">
+              <div className="bg-white rounded-2xl border border-[#EBEBEB] p-6 lg:p-8">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-6 h-6 rounded-full bg-[#F3F1FE] flex items-center justify-center">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -513,7 +534,7 @@ export default function DumpPage() {
           </div>
 
           {/* 입력 팁 섹션 */}
-          <div className="bg-[#F3F1FE] border border-[#E8E6F5] rounded-xl p-5">
+              <div className="bg-[#F3F1FE] rounded-2xl border border-[#E8E6F5] p-6 lg:p-8">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-7 h-7 rounded-full bg-[#534AB7] flex items-center justify-center">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -532,32 +553,305 @@ export default function DumpPage() {
             </ul>
           </div>
 
-          {/* 다음 단계 버튼 */}
-          <div className="mt-10 flex items-center justify-between">
-            <Link
-              href="/onboarding"
-              className="px-6 py-3 rounded-lg border border-[#E0E0E0] bg-white text-[#666] text-[15px] font-medium hover:bg-[#F5F5F5] transition-colors no-underline flex items-center gap-2"
+          {/* 참고 링크 입력 섹션 */}
+              <div className="bg-white rounded-2xl border border-[#EBEBEB] overflow-hidden">
+            <button
+              onClick={() => setLinkExpanded(!linkExpanded)}
+              className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#FAFAFA] transition-colors"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#E0F2FE] flex items-center justify-center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M10 13C10.4295 13.5741 10.9774 14.0492 11.6066 14.3929C12.2357 14.7367 12.9315 14.9411 13.6467 14.9923C14.3618 15.0435 15.0796 14.9404 15.7513 14.6898C16.4231 14.4392 17.0331 14.0471 17.54 13.54L20.54 10.54C21.4508 9.59699 21.9548 8.33397 21.9434 7.02299C21.932 5.71201 21.4061 4.45794 20.4791 3.5309C19.5521 2.60386 18.298 2.07802 16.987 2.06663C15.676 2.05523 14.413 2.55921 13.47 3.47L11.75 5.18" stroke="#0284C7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M14 11C13.5705 10.4259 13.0226 9.95083 12.3934 9.60707C11.7643 9.26331 11.0685 9.05889 10.3533 9.00768C9.63816 8.95646 8.92037 9.05964 8.24861 9.31023C7.57685 9.56082 6.96684 9.95294 6.46 10.46L3.46 13.46C2.54921 14.403 2.04523 15.666 2.05663 16.977C2.06802 18.288 2.59386 19.5421 3.5209 20.4691C4.44794 21.3961 5.70201 21.922 7.01299 21.9334C8.32397 21.9448 9.58699 21.4408 10.53 20.53L12.24 18.82" stroke="#0284C7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold text-[#1A1A1A] text-sm">참고 링크</span>
+                  <span className="text-xs text-[#888] ml-2">(선택)</span>
+                </div>
+              </div>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                className={`text-[#888] transition-transform duration-200 ${linkExpanded ? "rotate-180" : ""}`}
+              >
+                <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              이전 단계
-            </Link>
-            <Link
-              href="/places"
-              className={`px-8 py-3 rounded-lg text-[15px] font-semibold transition-all no-underline flex items-center gap-2 ${isValid
-                  ? "bg-[#534AB7] text-white hover:bg-[#4840A0] shadow-md shadow-[#534AB7]/20"
-                  : "bg-[#E8E8E8] text-[#999] cursor-not-allowed pointer-events-none"
-                }`}
-            >
-              다음 단계로
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </Link>
+            </button>
+            {linkExpanded && (
+              <div className="px-5 pb-5 border-t border-[#F0F0F0]">
+                <div className="pt-4">
+                  <p className="text-xs text-[#888] mb-4 leading-relaxed">
+                    블로그, 유튜브, 인스타그램 등 참고할 링크가 있다면 추가해주세요. 링크 내용을 간단히 설명해주시면 AI가 더 잘 이해할 수 있어요.
+                  </p>
+                  <div className="space-y-3">
+                    {links.map((link, index) => (
+                      <div key={link.id} className="p-4 bg-[#FAFAFA] rounded-lg border border-[#EBEBEB]">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-semibold px-2 py-1 rounded bg-[#E0F2FE] text-[#0369A1]">
+                            링크 {index + 1}
+                          </span>
+                          {links.length > 1 && (
+                            <button
+                              onClick={() => removeLink(link.id)}
+                              className="text-xs text-[#DC2626] hover:text-[#B91C1C] transition-colors flex items-center gap-1"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                              </svg>
+                              삭제
+                            </button>
+                          )}
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-xs font-medium text-[#666] mb-1.5">URL</label>
+                            <input
+                              type="url"
+                              placeholder="https://..."
+                              value={link.url}
+                              onChange={(e) => updateLink(link.id, "url", e.target.value)}
+                              className="w-full px-3 py-2.5 border border-[#E0E0E0] rounded-lg text-sm bg-white focus:outline-none focus:border-[#534AB7] transition-colors placeholder:text-[#B0B0B0]"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-[#666] mb-1.5">설명 (어떤 내용인가요?)</label>
+                            <input
+                              type="text"
+                              placeholder="예: 오사카 맛집 추천 블로그, 교토 여행 브이로그 등"
+                              value={link.description}
+                              onChange={(e) => updateLink(link.id, "description", e.target.value)}
+                              className="w-full px-3 py-2.5 border border-[#E0E0E0] rounded-lg text-sm bg-white focus:outline-none focus:border-[#534AB7] transition-colors placeholder:text-[#B0B0B0]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      onClick={addLink}
+                      className="w-full py-3 border-2 border-dashed border-[#E0E0E0] rounded-lg text-sm text-[#666] hover:border-[#534AB7] hover:text-[#534AB7] hover:bg-[#F9F8FF] transition-colors flex items-center justify-center gap-2"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      링크 추가
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+              </div>
+
+              {/* 다음 단계 버튼 - 모바일용 */}
+              <div className="lg:hidden mt-6 flex items-center justify-between">
+                <Link
+                  href="/onboarding"
+                  className="px-6 py-3 rounded-lg border border-[#E0E0E0] bg-white text-[#666] text-[15px] font-medium hover:bg-[#F5F5F5] transition-colors no-underline flex items-center gap-2"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  이전
+                </Link>
+                <Link
+                  href="/places"
+                  className={`px-8 py-3 rounded-lg text-[15px] font-semibold transition-all no-underline flex items-center gap-2 ${isValid
+                      ? "bg-[#534AB7] text-white hover:bg-[#4840A0] shadow-md shadow-[#534AB7]/20"
+                      : "bg-[#E8E8E8] text-[#999] cursor-not-allowed pointer-events-none"
+                    }`}
+                >
+                  다음
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+
+            {/* 오른쪽: 요약 사이드바 (1/3) */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-36">
+                {/* 여행 요약 카드 */}
+                <div className="bg-white rounded-2xl border border-[#EBEBEB] p-6 lg:p-8">
+                  <h3 className="text-lg font-semibold text-[#1A1A1A] mb-5">여행 요약</h3>
+
+                  <div className="space-y-4">
+                    {/* 여행지 */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-[#F5F5F5] flex items-center justify-center flex-shrink-0">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                          <path
+                            d="M9 9.75C10.0355 9.75 10.875 8.91053 10.875 7.875C10.875 6.83947 10.0355 6 9 6C7.96447 6 7.125 6.83947 7.125 7.875C7.125 8.91053 7.96447 9.75 9 9.75Z"
+                            stroke="#666"
+                            strokeWidth="1.5"
+                          />
+                          <path
+                            d="M9 16.5C9 16.5 14.25 12.375 14.25 7.875C14.25 4.97657 11.8984 2.625 9 2.625C6.10157 2.625 3.75 4.97657 3.75 7.875C3.75 12.375 9 16.5 9 16.5Z"
+                            stroke="#666"
+                            strokeWidth="1.5"
+                          />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-[#999] mb-1">여행지</p>
+                        <p className="text-base font-medium text-[#1A1A1A]">오사카, 교토, 나라</p>
+                      </div>
+                    </div>
+
+                    {/* 일정 */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-[#F5F5F5] flex items-center justify-center flex-shrink-0">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                          <rect x="2.25" y="3.375" width="13.5" height="12.375" rx="2" stroke="#666" strokeWidth="1.5" />
+                          <path d="M5.625 1.125V4.5M12.375 1.125V4.5M2.25 7.875H15.75" stroke="#666" strokeWidth="1.5" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-[#999] mb-1">일정</p>
+                        <p className="text-base font-medium text-[#1A1A1A]">5월 10일 ~ 5월 14일 (4박 5일)</p>
+                      </div>
+                    </div>
+
+                    {/* 동행자 */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-[#F5F5F5] flex items-center justify-center flex-shrink-0">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                          <circle cx="9" cy="6" r="3" stroke="#666" strokeWidth="1.5" />
+                          <path d="M3 15.75C3 12.4363 5.68629 9.75 9 9.75C12.3137 9.75 15 12.4363 15 15.75" stroke="#666" strokeWidth="1.5" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-[#999] mb-1">동행자</p>
+                        <p className="text-base font-medium text-[#1A1A1A]">2명</p>
+                      </div>
+                    </div>
+
+                    {/* 항공편 정보 */}
+                    {flights.some(f => f.airport || f.flightNumber || f.time) && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-[#F5F5F5] flex items-center justify-center flex-shrink-0">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <path d="M21 16V8C21 7.44772 20.5523 7 20 7H17L14 3H10L7 7H4C3.44772 7 3 7.44772 3 8V16C3 16.5523 3.44772 17 4 17H20C20.5523 17 21 16.5523 21 16Z" stroke="#666" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-[#999] mb-1">항공편</p>
+                          <div className="space-y-1">
+                            {flights.filter(f => f.airport || f.flightNumber).map(f => (
+                              <p key={f.id} className="text-sm text-[#1A1A1A]">
+                                <span className={`text-xs mr-1 ${f.type === 'departure' ? 'text-[#1D4ED8]' : 'text-[#DC2626]'}`}>
+                                  {f.type === 'departure' ? '출발' : '귀국'}
+                                </span>
+                                {[f.flightNumber, f.time].filter(Boolean).join(' ')}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 숙박 정보 */}
+                    {accommodations.some(a => a.name || a.location) && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-[#F5F5F5] flex items-center justify-center flex-shrink-0">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 21H21M4 21V10L12 3L20 10V21M9 21V14H15V21" stroke="#666" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-[#999] mb-1">숙소</p>
+                          <div className="space-y-1">
+                            {accommodations.filter(a => a.name).map(a => (
+                              <p key={a.id} className="text-sm text-[#1A1A1A]">{a.name}</p>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 입력된 내용 */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-[#F5F5F5] flex items-center justify-center flex-shrink-0">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                          <path d="M14 3V7C14 7.55228 14.4477 8 15 8H19" stroke="#666" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H14L19 8V19C19 20.1046 18.1046 21 17 21Z" stroke="#666" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M9 13H15M9 17H13" stroke="#666" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-[#999] mb-1">입력된 내용</p>
+                        <p className="text-base font-medium text-[#1A1A1A]">
+                          {len > 0 ? `${len.toLocaleString()}자` : '-'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* 참고 링크 */}
+                    {links.some(l => l.url) && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-[#F5F5F5] flex items-center justify-center flex-shrink-0">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <path d="M10 13C10.4295 13.5741 10.9774 14.0492 11.6066 14.3929C12.2357 14.7367 12.9315 14.9411 13.6467 14.9923C14.3618 15.0435 15.0796 14.9404 15.7513 14.6898C16.4231 14.4392 17.0331 14.0471 17.54 13.54L20.54 10.54C21.4508 9.59699 21.9548 8.33397 21.9434 7.02299C21.932 5.71201 21.4061 4.45794 20.4791 3.5309C19.5521 2.60386 18.298 2.07802 16.987 2.06663C15.676 2.05523 14.413 2.55921 13.47 3.47L11.75 5.18" stroke="#666" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M14 11C13.5705 10.4259 13.0226 9.95083 12.3934 9.60707C11.7643 9.26331 11.0685 9.05889 10.3533 9.00768C9.63816 8.95646 8.92037 9.05964 8.24861 9.31023C7.57685 9.56082 6.96684 9.95294 6.46 10.46L3.46 13.46C2.54921 14.403 2.04523 15.666 2.05663 16.977C2.06802 18.288 2.59386 19.5421 3.5209 20.4691C4.44794 21.3961 5.70201 21.922 7.01299 21.9334C8.32397 21.9448 9.58699 21.4408 10.53 20.53L12.24 18.82" stroke="#666" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-[#999] mb-1">참고 링크</p>
+                          <p className="text-base font-medium text-[#1A1A1A]">{links.filter(l => l.url).length}개</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 구분선 */}
+                  <div className="h-px bg-[#EBEBEB] my-6" />
+
+                  {/* 진행 상태 */}
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-[#999]">입력 완료도</span>
+                      <span className="text-sm font-medium text-[#534AB7]">{isValid ? '준비 완료' : '최소 10자 이상 입력'}</span>
+                    </div>
+                    <div className="h-2 bg-[#F0F0F0] rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#534AB7] rounded-full transition-all duration-300"
+                        style={{
+                          width: `${Math.min((len / 10) * 100, 100)}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 이전/다음 버튼 */}
+                  <div className="space-y-3">
+                    <Link
+                      href="/places"
+                      className={`block w-full py-4 rounded-xl border-none text-base font-semibold text-center transition-all no-underline ${
+                        isValid
+                          ? "bg-[#534AB7] text-white cursor-pointer shadow-[0_4px_12px_rgba(83,74,183,0.3)] hover:bg-[#4a42a5] active:scale-[0.98]"
+                          : "bg-[#E0E0E0] text-[#999] cursor-default pointer-events-none"
+                      }`}
+                    >
+                      다음 단계로
+                    </Link>
+                    <Link
+                      href="/onboarding"
+                      className="block w-full py-3 rounded-xl border border-[#E0E0E0] bg-white text-[#666] text-sm font-medium text-center hover:bg-[#F8F8F8] transition-colors no-underline"
+                    >
+                      이전 단계
+                    </Link>
+                  </div>
+
+                  {!isValid && <p className="mt-3 text-xs text-[#B0B0B0] text-center">여행 정보를 10자 이상 입력하면 다음 단계로 진행할 수 있어요</p>}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </main>
+      </div>
 
       {/* 토스트 */}
       <Toast
