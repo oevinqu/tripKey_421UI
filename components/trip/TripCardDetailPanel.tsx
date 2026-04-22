@@ -364,6 +364,52 @@ export function TripCardDetailPanel({
           )}
         </div>
 
+        {/* 제외/포함 토글 */}
+          <div className="border-t border-[#EBEBEB] pt-6">
+            <div className="flex items-center justify-between p-4 bg-[#FAFAFA] rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${card.is_excluded ? "bg-[#F3F4F6]" : "bg-[#DCFCE7]"}`}>
+                  {card.is_excluded ? (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2">
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#1A1A1A]">
+                    {card.is_excluded ? "이 항목은 제외됨" : "이 항목은 포함됨"}
+                  </p>
+                  <p className="text-xs text-[#888]">
+                    {card.is_excluded ? "일정에서 제외된 상태입니다" : "일정에 포함될 예정입니다"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  if (onUpdateCard) {
+                    onUpdateCard({
+                      ...card,
+                      is_excluded: !card.is_excluded,
+                    });
+                  }
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  card.is_excluded
+                    ? "bg-[#534AB7] text-white hover:bg-[#4840A0]"
+                    : "bg-white border border-[#E0E0E0] text-[#666] hover:bg-[#F5F5F5]"
+                }`}
+              >
+                {card.is_excluded ? "다시 포함" : "제외하기"}
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* 푸터 */}
         <div className="sticky bottom-0 p-6 pt-4 border-t border-[#EBEBEB] bg-white">
           <div className="flex gap-3">
@@ -373,7 +419,7 @@ export function TripCardDetailPanel({
             >
               닫기
             </button>
-            {card.classification !== "confirmed" && (
+            {card.classification !== "confirmed" && !card.is_excluded && (
               <button
                 onClick={handleConfirm}
                 disabled={

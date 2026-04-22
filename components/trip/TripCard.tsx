@@ -20,7 +20,9 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
   
   const isBlocked = card.placement_status === "blocked";
   const isProcessing = card.processing_status === "processing";
+  const isExcluded = card.is_excluded === true;
   const needsAttention = card.placement_status === "ready_partial" || card.placement_status === "blocked";
+  const isClickable = !isBlocked && !isProcessing;
 
   // 카테고리 아이콘 렌더링
   const renderCategoryIcon = () => {
@@ -63,11 +65,13 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
 
   return (
     <div
-      onClick={isBlocked ? undefined : onClick}
+      onClick={isClickable ? onClick : undefined}
       className={`
         relative flex bg-white rounded-xl border overflow-hidden transition-all
-        ${isBlocked 
-          ? "opacity-60 cursor-not-allowed border-[#E0E0E0]" 
+        ${isExcluded 
+          ? "opacity-50 cursor-default border-[#E0E0E0] bg-[#F5F5F5]"
+          : isBlocked || isProcessing
+          ? "opacity-70 cursor-not-allowed border-[#E0E0E0]" 
           : "cursor-pointer border-[#EBEBEB] hover:border-[#534AB7] hover:shadow-md"
         }
         ${compact ? "p-3" : "p-4"}
@@ -132,6 +136,15 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
                 실패
+              </span>
+            )}
+            {isExcluded && (
+              <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-[#F3F4F6] text-[#6B7280]">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                </svg>
+                제외됨
               </span>
             )}
           </div>
@@ -209,7 +222,7 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
       </div>
 
       {/* 우측 화살표 (클릭 가능할 때만) */}
-      {!isBlocked && (
+      {isClickable && !isExcluded && (
         <div className="flex items-center pl-2 text-[#CCCCCC]">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="9,18 15,12 9,6" />

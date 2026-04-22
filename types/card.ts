@@ -45,6 +45,9 @@ export interface TripCardData {
   tags?: string[];
   source?: string;
   day?: number;
+  
+  // 제외 여부
+  is_excluded?: boolean;
 }
 
 // 그룹 데이터 모델

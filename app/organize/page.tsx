@@ -207,6 +207,33 @@ const DEMO_CARDS: TripCardData[] = [
     duration: "1-2시간",
     notes: "게이샤 거리 구경",
   },
+
+  // ========== 제외된 항목 (is_excluded) ==========
+  {
+    id: "17",
+    title: "하루카스 300 전망대",
+    category: "place",
+    classification: "confirmed",
+    placement_status: "ready",
+    processing_status: "idle",
+    action_type: "review_only",
+    location: "오사카",
+    duration: "1시간",
+    notes: "일정상 시간이 부족하여 제외",
+    is_excluded: true,
+  },
+  {
+    id: "18",
+    title: "덴포잔 대관람차",
+    category: "activity",
+    classification: "confirmed",
+    placement_status: "ready",
+    processing_status: "idle",
+    action_type: "review_only",
+    location: "오사카",
+    duration: "30분",
+    is_excluded: true,
+  },
 ];
 
 export default function OrganizePage() {
@@ -215,28 +242,50 @@ export default function OrganizePage() {
   const [panelOpen, setPanelOpen] = useState(false);
   const currentStep = 3;
 
+  // 그룹 접기/펼치기 상태
+  const [expandedGroups, setExpandedGroups] = useState({
+    needsQuestion: true,
+    needsConfirmation: true,
+    organized: true,
+    excluded: false,
+  });
+
+  const toggleGroup = (group: keyof typeof expandedGroups) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [group]: !prev[group],
+    }));
+  };
+
   // 그룹별 카드 분류
   const groupedCards = useMemo(() => {
-    const needsQuestion = cards.filter(
+    const activeCards = cards.filter((c) => !c.is_excluded);
+    const excludedCards = cards.filter((c) => c.is_excluded);
+    
+    const needsQuestion = activeCards.filter(
       (c) => c.placement_status === "ready_partial" || c.placement_status === "blocked"
     );
-    const needsConfirmation = cards.filter(
+    const needsConfirmation = activeCards.filter(
       (c) => c.classification === "undecided" && c.placement_status !== "blocked" && c.placement_status !== "ready_partial"
     );
-    const organized = cards.filter(
+    const organized = activeCards.filter(
       (c) => c.placement_status === "ready" && c.classification === "confirmed"
     );
 
-    return { needsQuestion, needsConfirmation, organized };
+    return { needsQuestion, needsConfirmation, organized, excluded: excludedCards };
   }, [cards]);
 
-  // ready 상태 비율 계산
+  // ready 상태 비율 계산 (제외된 카드는 제외)
   const readyProgress = useMemo(() => {
-    const readyCount = cards.filter((c) => c.placement_status === "ready" && c.classification === "confirmed").length;
-    return Math.round((readyCount / cards.length) * 100);
+    const activeCards = cards.filter((c) => !c.is_excluded);
+    if (activeCards.length === 0) return 100;
+    const readyCount = activeCards.filter((c) => c.placement_status === "ready" && c.classification === "confirmed").length;
+    return Math.round((readyCount / activeCards.length) * 100);
   }, [cards]);
 
   const handleCardClick = (card: TripCardData) => {
+    // processing 상태일 때는 클릭 불가
+    if (card.processing_status === "processing") return;
     setSelectedCard(card);
     setPanelOpen(true);
   };
@@ -297,80 +346,171 @@ export default function OrganizePage() {
 
               {/* 질문이 필요한 항목 */}
               {groupedCards.needsQuestion.length > 0 && (
-                <div className="bg-white rounded-2xl border border-[#EBEBEB] p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-[#FEF3C7] flex items-center justify-center">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3m.08 4h.01" />
-                      </svg>
+                <div className="bg-white rounded-2xl border border-[#EBEBEB] overflow-hidden">
+                  <button
+                    onClick={() => toggleGroup("needsQuestion")}
+                    className="w-full p-6 flex items-center justify-between hover:bg-[#FAFAFA] transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#FEF3C7] flex items-center justify-center">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3m.08 4h.01" />
+                        </svg>
+                      </div>
+                      <div className="text-left">
+                        <h2 className="text-base font-semibold text-[#1A1A1A]">질문이 필요한 항목</h2>
+                        <p className="text-xs text-[#888]">{groupedCards.needsQuestion.length}개의 항목에 답변이 필요해요</p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-base font-semibold text-[#1A1A1A]">질문이 필요한 항목</h2>
-                      <p className="text-xs text-[#888]">{groupedCards.needsQuestion.length}개의 항목에 답변이 필요해요</p>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className={`text-[#888] transition-transform duration-200 ${expandedGroups.needsQuestion ? "rotate-180" : ""}`}
+                    >
+                      <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                  {expandedGroups.needsQuestion && (
+                    <div className="px-6 pb-6 space-y-3">
+                      {groupedCards.needsQuestion.map((card) => (
+                        <TripCard
+                          key={card.id}
+                          card={card}
+                          onClick={() => handleCardClick(card)}
+                        />
+                      ))}
                     </div>
-                  </div>
-                  <div className="space-y-3">
-                    {groupedCards.needsQuestion.map((card) => (
-                      <TripCard
-                        key={card.id}
-                        card={card}
-                        onClick={() => handleCardClick(card)}
-                      />
-                    ))}
-                  </div>
+                  )}
                 </div>
               )}
 
               {/* 확인이 필요한 항목 */}
               {groupedCards.needsConfirmation.length > 0 && (
-                <div className="bg-white rounded-2xl border border-[#EBEBEB] p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-[#DBEAFE] flex items-center justify-center">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2">
-                        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
-                      </svg>
+                <div className="bg-white rounded-2xl border border-[#EBEBEB] overflow-hidden">
+                  <button
+                    onClick={() => toggleGroup("needsConfirmation")}
+                    className="w-full p-6 flex items-center justify-between hover:bg-[#FAFAFA] transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#DBEAFE] flex items-center justify-center">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2">
+                          <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+                        </svg>
+                      </div>
+                      <div className="text-left">
+                        <h2 className="text-base font-semibold text-[#1A1A1A]">확인이 필요한 항목</h2>
+                        <p className="text-xs text-[#888]">{groupedCards.needsConfirmation.length}개의 항목을 확인해주세요</p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-base font-semibold text-[#1A1A1A]">확인이 필요한 항목</h2>
-                      <p className="text-xs text-[#888]">{groupedCards.needsConfirmation.length}개의 항목을 확인해주세요</p>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className={`text-[#888] transition-transform duration-200 ${expandedGroups.needsConfirmation ? "rotate-180" : ""}`}
+                    >
+                      <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                  {expandedGroups.needsConfirmation && (
+                    <div className="px-6 pb-6 space-y-3">
+                      {groupedCards.needsConfirmation.map((card) => (
+                        <TripCard
+                          key={card.id}
+                          card={card}
+                          onClick={() => handleCardClick(card)}
+                        />
+                      ))}
                     </div>
-                  </div>
-                  <div className="space-y-3">
-                    {groupedCards.needsConfirmation.map((card) => (
-                      <TripCard
-                        key={card.id}
-                        card={card}
-                        onClick={() => handleCardClick(card)}
-                      />
-                    ))}
-                  </div>
+                  )}
                 </div>
               )}
 
               {/* 정리된 항목 */}
               {groupedCards.organized.length > 0 && (
-                <div className="bg-white rounded-2xl border border-[#EBEBEB] p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-[#DCFCE7] flex items-center justify-center">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
+                <div className="bg-white rounded-2xl border border-[#EBEBEB] overflow-hidden">
+                  <button
+                    onClick={() => toggleGroup("organized")}
+                    className="w-full p-6 flex items-center justify-between hover:bg-[#FAFAFA] transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#DCFCE7] flex items-center justify-center">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2">
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      </div>
+                      <div className="text-left">
+                        <h2 className="text-base font-semibold text-[#1A1A1A]">정리된 항목</h2>
+                        <p className="text-xs text-[#888]">{groupedCards.organized.length}개의 항목이 준비됐어요</p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-base font-semibold text-[#1A1A1A]">정리된 항목</h2>
-                      <p className="text-xs text-[#888]">{groupedCards.organized.length}개의 항목이 준비됐어요</p>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className={`text-[#888] transition-transform duration-200 ${expandedGroups.organized ? "rotate-180" : ""}`}
+                    >
+                      <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                  {expandedGroups.organized && (
+                    <div className="px-6 pb-6 space-y-3">
+                      {groupedCards.organized.map((card) => (
+                        <TripCard
+                          key={card.id}
+                          card={card}
+                          onClick={() => handleCardClick(card)}
+                        />
+                      ))}
                     </div>
-                  </div>
-                  <div className="space-y-3">
-                    {groupedCards.organized.map((card) => (
-                      <TripCard
-                        key={card.id}
-                        card={card}
-                        onClick={() => handleCardClick(card)}
-                      />
-                    ))}
-                  </div>
+                  )}
+                </div>
+              )}
+
+              {/* 제외된 항목 */}
+              {groupedCards.excluded.length > 0 && (
+                <div className="bg-white rounded-2xl border border-[#EBEBEB] overflow-hidden">
+                  <button
+                    onClick={() => toggleGroup("excluded")}
+                    className="w-full p-6 flex items-center justify-between hover:bg-[#FAFAFA] transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#F3F4F6] flex items-center justify-center">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                        </svg>
+                      </div>
+                      <div className="text-left">
+                        <h2 className="text-base font-semibold text-[#6B7280]">제외된 항목</h2>
+                        <p className="text-xs text-[#888]">{groupedCards.excluded.length}개의 항목이 제외됨</p>
+                      </div>
+                    </div>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className={`text-[#888] transition-transform duration-200 ${expandedGroups.excluded ? "rotate-180" : ""}`}
+                    >
+                      <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                  {expandedGroups.excluded && (
+                    <div className="px-6 pb-6 space-y-3">
+                      {groupedCards.excluded.map((card) => (
+                        <TripCard
+                          key={card.id}
+                          card={card}
+                          onClick={() => handleCardClick(card)}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -464,7 +604,7 @@ export default function OrganizePage() {
                       <div className="flex-1">
                         <p className="text-xs text-[#999] mb-1">전체 카드</p>
                         <p className="text-base font-medium text-[#1A1A1A]">{cards.length}개</p>
-                        <div className="mt-1 flex flex-wrap gap-1">
+<div className="mt-1 flex flex-wrap gap-1">
                           {groupedCards.needsQuestion.length > 0 && (
                             <span className="text-xs px-1.5 py-0.5 rounded bg-[#FEF3C7] text-[#92400E]">
                               질문 {groupedCards.needsQuestion.length}
@@ -478,6 +618,11 @@ export default function OrganizePage() {
                           <span className="text-xs px-1.5 py-0.5 rounded bg-[#DCFCE7] text-[#166534]">
                             완료 {groupedCards.organized.length}
                           </span>
+                          {groupedCards.excluded.length > 0 && (
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-[#F3F4F6] text-[#6B7280]">
+                              제외 {groupedCards.excluded.length}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
