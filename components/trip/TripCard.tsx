@@ -23,14 +23,30 @@ interface TripCardProps {
   compact?: boolean;
 }
 
+function formatEstimatedDuration(minutes: number | null): string | null {
+  if (minutes == null) return null;
+  if (minutes < 60) return `${minutes}분`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes === 0
+    ? `${hours}시간`
+    : `${hours}시간 ${remainingMinutes}분`;
+}
+
 export function TripCard({ card, onClick, compact = false }: TripCardProps) {
   const classificationColor = CLASSIFICATION_COLORS[card.classification];
   const categoryConfig = CATEGORY_CONFIG[card.category];
+  const estimatedDurationLabel = formatEstimatedDuration(card.estimated_duration_min);
   
   const isBlocked = card.placement_status === "blocked";
+  const isNeedsInput = card.placement_status === "needs_input";
   const isProcessing = card.processing_status === "processing";
-  const isExcluded = card.is_excluded === true;
-  const needsAttention = card.placement_status === "ready_partial" || card.placement_status === "blocked";
+  const isExcluded = card.is_excluded;
+  const needsAttention =
+    card.placement_status === "ready_partial" ||
+    card.placement_status === "blocked" ||
+    card.placement_status === "needs_input";
   const isClickable = canOpenTripCardDetail(card) && !isExcluded;
   const disabledReason = getTripCardDetailLockReason(card);
 
@@ -68,6 +84,14 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
         return (
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2M7 2v20M21 15V2v0a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7" />
+          </svg>
+        );
+      case "etc":
+        return (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="1" />
+            <circle cx="19" cy="12" r="1" />
+            <circle cx="5" cy="12" r="1" />
           </svg>
         );
     }
@@ -163,7 +187,7 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
           {needsAttention && (
             <div
               className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                isBlocked ? "bg-[#FEE2E2]" : "bg-[#FEF3C7]"
+                isBlocked ? "bg-[#FEE2E2]" : isNeedsInput ? "bg-[#FFEDD5]" : "bg-[#FEF3C7]"
               }`}
             >
               <svg
@@ -171,7 +195,7 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
                 height="14"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke={isBlocked ? "#DC2626" : "#F59E0B"}
+                stroke={isBlocked ? "#DC2626" : isNeedsInput ? "#EA580C" : "#F59E0B"}
                 strokeWidth="2"
               >
                 <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -182,7 +206,7 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
 
         {/* 제목 */}
         <h3 className={`font-semibold text-[#1A1A1A] ${compact ? "text-sm" : "text-base"}`}>
-          {card.title}
+          {card.name}
         </h3>
 
         {/* 부가 정보 */}
@@ -197,21 +221,21 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
                 {card.location}
               </span>
             )}
-            {card.time_slot && (
+            {card.time_constraint && (
               <span className="flex items-center gap-1">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12,6 12,12 16,14" />
                 </svg>
-                {card.time_slot}
+                {card.time_constraint}
               </span>
             )}
-            {card.duration && (
+            {estimatedDurationLabel && (
               <span className="flex items-center gap-1">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
                 </svg>
-                {card.duration}
+                {estimatedDurationLabel}
               </span>
             )}
           </div>

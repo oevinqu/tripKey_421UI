@@ -12,7 +12,7 @@ const TRIP_INFO = {
   endDate: "5월 14일",
 };
 
-const CHECKLIST_ITEMS = [
+const CHECKLIST_ITEMS: ChecklistItem[] = [
   { id: "ck1", label: "여권 유효기간 확인", always: true },
   { id: "ck2", label: "항공권 출력 / 모바일 저장", condition: "flight" },
   { id: "ck3", label: "숙소 바우처 준비", condition: "hotel" },
@@ -21,7 +21,7 @@ const CHECKLIST_ITEMS = [
   { id: "ck6", label: "환전", always: true },
 ];
 
-const DAYS = [
+const DAYS: DayData[] = [
   {
     day: 1,
     label: "Day 1 - 오사카 남부",
@@ -259,6 +259,30 @@ interface ChecklistItem {
   from?: string;
 }
 
+type DayPlace =
+  | {
+      id: string;
+      name: string;
+      category: string;
+      stay: number;
+      startTime: string;
+      remind: string[];
+    }
+  | {
+      travel: TravelInfo;
+    };
+
+interface DayData {
+  day: number;
+  label: string;
+  insight: {
+    totalTravel: string;
+    note: string;
+  } | null;
+  places: DayPlace[];
+  checklist: ChecklistItem[];
+}
+
 // 체크리스트 편집 모달
 function ChecklistEditModal({
   isOpen,
@@ -454,8 +478,8 @@ export default function SCR05() {
   const hasHotel = true;
 
   // 체크리스트 상태 관리
-  const [mainChecklist, setMainChecklist] = useState(CHECKLIST_ITEMS);
-  const [daysData, setDaysData] = useState(DAYS);
+  const [mainChecklist, setMainChecklist] = useState<ChecklistItem[]>(CHECKLIST_ITEMS);
+  const [daysData, setDaysData] = useState<DayData[]>(DAYS);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingDayChecklist, setEditingDayChecklist] = useState<number | null>(null);
 
