@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { MainHeader } from "@/components/header";
-import { SubHeader } from "@/components/sub-header";
+// import { SubHeader } from "@/components/sub-header";
 import { TripCard, TripCardSkeleton } from "@/components/trip/TripCard";
 import { TripCardDetailPanel } from "@/components/trip/TripCardDetailPanel";
 import { TripCardData, CardGroup } from "@/types/card";
@@ -209,7 +209,7 @@ export default function OrganizePage() {
                 <p className="mt-2 text-base text-[#888]">
                   AI가 분석한 여행 정보를 확인하고 질문에 답변해주세요
                 </p>
-                
+
                 {/* 프로그레스 바 */}
                 <div className="mt-4 bg-white rounded-xl border border-[#EBEBEB] p-4">
                   <div className="flex items-center justify-between mb-2">
@@ -320,11 +320,10 @@ export default function OrganizePage() {
                 </Link>
                 <Link
                   href="/schedule"
-                  className={`px-8 py-3 rounded-lg text-[15px] font-semibold transition-all no-underline flex items-center gap-2 ${
-                    readyProgress === 100
-                      ? "bg-[#534AB7] text-white hover:bg-[#4840A0] shadow-md shadow-[#534AB7]/20"
-                      : "bg-[#E8E8E8] text-[#999] cursor-not-allowed pointer-events-none"
-                  }`}
+                  className={`px-8 py-3 rounded-lg text-[15px] font-semibold transition-all no-underline flex items-center gap-2 ${readyProgress === 100
+                    ? "bg-[#534AB7] text-white hover:bg-[#4840A0] shadow-md shadow-[#534AB7]/20"
+                    : "bg-[#E8E8E8] text-[#999] cursor-not-allowed pointer-events-none"
+                    }`}
                 >
                   다음
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -440,11 +439,10 @@ export default function OrganizePage() {
                   <div className="space-y-3">
                     <Link
                       href="/schedule"
-                      className={`block w-full py-4 rounded-xl border-none text-base font-semibold text-center transition-all no-underline ${
-                        readyProgress === 100
-                          ? "bg-[#534AB7] text-white cursor-pointer shadow-[0_4px_12px_rgba(83,74,183,0.3)] hover:bg-[#4a42a5] active:scale-[0.98]"
-                          : "bg-[#E0E0E0] text-[#999] cursor-default pointer-events-none"
-                      }`}
+                      className={`block w-full py-4 rounded-xl border-none text-base font-semibold text-center transition-all no-underline ${readyProgress === 100
+                        ? "bg-[#534AB7] text-white cursor-pointer shadow-[0_4px_12px_rgba(83,74,183,0.3)] hover:bg-[#4a42a5] active:scale-[0.98]"
+                        : "bg-[#E0E0E0] text-[#999] cursor-default pointer-events-none"
+                        }`}
                     >
                       다음 단계로
                     </Link>
