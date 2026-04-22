@@ -362,9 +362,8 @@ export function TripCardDetailPanel({
               )}
             </div>
           )}
-        </div>
 
-        {/* 제외/포함 토글 */}
+          {/* 제외/포함 토글 */}
           <div className="border-t border-[#EBEBEB] pt-6">
             <div className="flex items-center justify-between p-4 bg-[#FAFAFA] rounded-xl">
               <div className="flex items-center gap-3">
