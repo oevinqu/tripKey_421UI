@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   TripCardData,
   CLASSIFICATION_COLORS,
@@ -15,6 +16,8 @@ interface TripCardProps {
 }
 
 export function TripCard({ card, onClick, compact = false }: TripCardProps) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  
   const classificationColor = CLASSIFICATION_COLORS[card.classification];
   const categoryConfig = CATEGORY_CONFIG[card.category];
   
@@ -23,6 +26,19 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
   const isExcluded = card.is_excluded === true;
   const needsAttention = card.placement_status === "ready_partial" || card.placement_status === "blocked";
   const isClickable = !isBlocked && !isProcessing;
+
+  // 클릭 불가 이유 메시지
+  const getDisabledReason = () => {
+    if (isProcessing) {
+      return "AI가 정보를 처리 중입니다. 잠시만 기다려주세요.";
+    }
+    if (isBlocked) {
+      return "필수 정보가 누락되어 있습니다. 정리 화면에서 질문에 답변해주세요.";
+    }
+    return null;
+  };
+
+  const disabledReason = getDisabledReason();
 
   // 카테고리 아이콘 렌더링
   const renderCategoryIcon = () => {
@@ -66,6 +82,8 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
   return (
     <div
       onClick={isClickable ? onClick : undefined}
+      onMouseEnter={() => !isClickable && setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
       className={`
         relative flex bg-white rounded-xl border overflow-hidden transition-all
         ${isExcluded 
@@ -77,6 +95,26 @@ export function TripCard({ card, onClick, compact = false }: TripCardProps) {
         ${compact ? "p-3" : "p-4"}
       `}
     >
+      {/* 클릭 불가 이유 툴팁 */}
+      {showTooltip && disabledReason && (
+        <div className="absolute top-full left-0 right-0 mt-2 z-50 animate-in fade-in-0 zoom-in-95 duration-200">
+          <div className="mx-2 p-3 bg-[#1A1A1A] rounded-lg shadow-lg">
+            <div className="flex items-start gap-2">
+              {isProcessing ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin flex-shrink-0 mt-0.5" />
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" className="flex-shrink-0 mt-0.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v4m0 4h.01" />
+                </svg>
+              )}
+              <p className="text-xs text-white leading-relaxed">{disabledReason}</p>
+            </div>
+          </div>
+          {/* 툴팁 화살표 */}
+          <div className="absolute -top-1 left-6 w-2 h-2 bg-[#1A1A1A] rotate-45" />
+        </div>
+      )}
       {/* 좌측 색상 바 */}
       <div
         className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
