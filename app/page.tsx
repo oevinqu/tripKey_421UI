@@ -6,6 +6,7 @@ import { MainHeader, SubHeader } from "@/components/header";
 
 // 여행 정보 (온보딩에서 입력받은 정보)
 const TRIP_INFO = {
+  tripName: "간사이 봄 여행",
   destinations: ["오사카", "교토", "나라"],
   travelers: 2,
   startDate: "5월 10일",
@@ -283,6 +284,230 @@ interface DayData {
   checklist: ChecklistItem[];
 }
 
+interface FinalAlertItem {
+  id: string;
+  type: "practical" | "insight";
+  title: string;
+  message: string;
+}
+
+interface FinalReviewCard {
+  id: string;
+  name: string;
+  category: string;
+  time: string;
+  location: string;
+  context: string | null;
+  tip: string | null;
+}
+
+interface FinalReviewDay {
+  day: number;
+  label: string;
+  summary: string;
+  totalTravel: string;
+  totalDuration: string;
+  cards: FinalReviewCard[];
+  checklist: ChecklistItem[];
+}
+
+interface TripWideContextItem {
+  id: string;
+  label: string;
+  value: string;
+  tone: "violet" | "amber" | "emerald" | "slate";
+}
+
+const FINAL_ALERT_CARDS: FinalAlertItem[] = [
+  {
+    id: "fa1",
+    type: "practical",
+    title: "실무 알림",
+    message: "교토역 → 오사카 이동 수단이 아직 확정되지 않았어요. 짐이 많다면 환승이 적은 경로가 더 적합해요.",
+  },
+  {
+    id: "fa2",
+    type: "practical",
+    title: "출발 준비",
+    message: "간사이 공항 출발 동선은 숙소 체크아웃 시간과 함께 다시 확인하는 편이 안전해요.",
+  },
+  {
+    id: "fa3",
+    type: "insight",
+    title: "AI 인사이트",
+    message: "유니버설 스튜디오 재팬, 아라시야마 대나무숲, 후시미 이나리처럼 이른 시간 가치가 큰 장소가 섞여 있어 오전 집중형 일정으로 보입니다.",
+  },
+  {
+    id: "fa4",
+    type: "insight",
+    title: "AI 인사이트",
+    message: "숙소와 공항/교통 카드는 중복 배치가 가능하므로 Day 재조정 여지가 남아 있어요.",
+  },
+];
+
+const FINAL_TRIP_CONTEXT: TripWideContextItem[] = [
+  { id: "tc1", label: "여행 리듬", value: "오전 집중형", tone: "violet" },
+  { id: "tc2", label: "이동 성향", value: "환승 적게", tone: "amber" },
+  { id: "tc3", label: "숙소 전략", value: "오사카/교토 분산", tone: "emerald" },
+  { id: "tc4", label: "남은 변수", value: "교통 1건 확정 필요", tone: "slate" },
+];
+
+const FINAL_REVIEW_DAYS: FinalReviewDay[] = [
+  {
+    day: 1,
+    label: "Day 1 - 오사카 도착과 시내 적응",
+    summary: "오사카 도착 후 시내 흐름을 익히는 날이에요. 식사와 전망, 체크인을 부드럽게 연결했습니다.",
+    totalTravel: "48분",
+    totalDuration: "6시간 30분",
+    cards: [
+      {
+        id: "fr1",
+        name: "난바 체크인",
+        category: "숙소",
+        time: "16:00",
+        location: "오사카",
+        context: "오사카 숙소로 난바 근처를 잡았어요",
+        tip: null,
+      },
+      {
+        id: "fr2",
+        name: "도톤보리 맛집 투어",
+        category: "맛집",
+        time: "18:00",
+        location: "오사카",
+        context: "도톤보리 맛집 여러 곳 둘러볼 예정",
+        tip: "저녁 시간대는 웨이팅이 길 수 있어요",
+      },
+      {
+        id: "fr3",
+        name: "하루카스 300 전망대",
+        category: "장소",
+        time: "20:00",
+        location: "오사카",
+        context: null,
+        tip: "날씨 맑은 날 방문 추천",
+      },
+    ],
+    checklist: [
+      { id: "fdc1", label: "현금 인출 여부 확인", always: true, from: "To-do" },
+      { id: "fdc2", label: "숙소 체크인 시간 재확인", always: true, from: "난바 체크인" },
+    ],
+  },
+  {
+    day: 2,
+    label: "Day 2 - 집중 방문 Day",
+    summary: "가장 긴 체류와 체력 소모가 있는 날이라 오전 집중 배치가 핵심이에요.",
+    totalTravel: "36분",
+    totalDuration: "11시간 20분",
+    cards: [
+      {
+        id: "fr4",
+        name: "유니버설 스튜디오 재팬",
+        category: "장소",
+        time: "09:00",
+        location: "오사카",
+        context: "하루 종일 놀 예정이에요",
+        tip: "오픈런 추천, 인기 어트랙션은 오전에 먼저 방문하세요",
+      },
+      {
+        id: "fr5",
+        name: "쿠로몬 시장",
+        category: "맛집",
+        time: "19:00",
+        location: "오사카",
+        context: null,
+        tip: "오후에는 문 닫는 가게가 많아요",
+      },
+    ],
+    checklist: [
+      { id: "fdc3", label: "입장권 모바일 저장 확인", always: true, from: "유니버설 스튜디오 재팬" },
+      { id: "fdc4", label: "편한 신발 착용", always: true, from: "유니버설 스튜디오 재팬" },
+    ],
+  },
+  {
+    day: 3,
+    label: "Day 3 - 교토/나라 선택 확장",
+    summary: "선택 카드에서 올라온 장소와 확정 카드가 섞여 있는 날입니다. 오전 효율이 특히 중요해요.",
+    totalTravel: "1시간 12분",
+    totalDuration: "9시간 10분",
+    cards: [
+      {
+        id: "fr6",
+        name: "아라시야마 대나무숲",
+        category: "장소",
+        time: "08:00",
+        location: "교토",
+        context: null,
+        tip: "이른 아침 방문 시 한산해요",
+      },
+      {
+        id: "fr7",
+        name: "기온 거리 산책",
+        category: "활동",
+        time: "14:00",
+        location: "교토",
+        context: null,
+        tip: null,
+      },
+      {
+        id: "fr8",
+        name: "나라 사슴공원",
+        category: "활동",
+        time: "17:00",
+        location: "나라",
+        context: null,
+        tip: "사슴 전용 과자 판매소 근처는 혼잡할 수 있어요",
+      },
+    ],
+    checklist: [
+      { id: "fdc5", label: "교토역 → 오사카 이동 수단 결정", always: true, from: "교통 맥락" },
+      { id: "fdc6", label: "아침 출발 시간 고정", always: true, from: "아라시야마 대나무숲" },
+    ],
+  },
+  {
+    day: 4,
+    label: "Day 4 - 숙소와 공항 동선 정리",
+    summary: "중복 배치 가능한 숙소/교통 카드 기준으로 유연하게 조정할 수 있는 날이에요.",
+    totalTravel: "54분",
+    totalDuration: "4시간 40분",
+    cards: [
+      {
+        id: "fr9",
+        name: "교토 게스트하우스",
+        category: "숙소",
+        time: "15:00",
+        location: "교토",
+        context: "교토 숙소로 게스트하우스 예정",
+        tip: null,
+      },
+      {
+        id: "fr10",
+        name: "간사이 공항 출발 동선",
+        category: "교통",
+        time: "18:00",
+        location: "간사이 공항",
+        context: null,
+        tip: null,
+      },
+    ],
+    checklist: [
+      { id: "fdc7", label: "체크인 후 세탁 여부 결정", always: true, from: "To-do" },
+      { id: "fdc8", label: "공항 도착 목표 시간 확인", always: true, from: "간사이 공항 출발 동선" },
+    ],
+  },
+  {
+    day: 5,
+    label: "Day 5 - 비워둔 완충 Day",
+    summary: "현재는 완충일로 남겨둔 상태예요. 쇼핑 후보나 제외했던 카드를 다시 넣을 수 있습니다.",
+    totalTravel: "유동적",
+    totalDuration: "유동적",
+    cards: [],
+    checklist: [
+      { id: "fdc9", label: "쇼핑 후보 메모 재검토", always: true, from: "제외 카드" },
+    ],
+  },
+];
+
 // 체크리스트 편집 모달
 function ChecklistEditModal({
   isOpen,
@@ -480,8 +705,10 @@ export default function SCR05() {
   // 체크리스트 상태 관리
   const [mainChecklist, setMainChecklist] = useState<ChecklistItem[]>(CHECKLIST_ITEMS);
   const [daysData, setDaysData] = useState<DayData[]>(DAYS);
+  const [finalDaysData, setFinalDaysData] = useState<FinalReviewDay[]>(FINAL_REVIEW_DAYS);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingDayChecklist, setEditingDayChecklist] = useState<number | null>(null);
+  const [showLegacyView, setShowLegacyView] = useState(true);
 
   const showToast = (msg: string) => {
     setToast({ visible: true, message: msg });
@@ -499,6 +726,7 @@ export default function SCR05() {
   });
 
   const activeDayData = daysData.find((d) => d.day === activeDay);
+  const activeFinalDayData = finalDaysData.find((d) => d.day === activeDay);
 
   const handleExportPDF = () => {
     setExporting(true);
@@ -519,13 +747,23 @@ export default function SCR05() {
 
   const handleSaveDayChecklist = (items: ChecklistItem[]) => {
     if (editingDayChecklist !== null) {
-      setDaysData(
-        daysData.map((day) =>
-          day.day === editingDayChecklist
-            ? { ...day, checklist: items.map((item) => ({ ...item, from: item.from || "" })) }
-            : day
-        )
-      );
+      if (showLegacyView) {
+        setDaysData(
+          daysData.map((day) =>
+            day.day === editingDayChecklist
+              ? { ...day, checklist: items.map((item) => ({ ...item, from: item.from || "" })) }
+              : day
+          )
+        );
+      } else {
+        setFinalDaysData(
+          finalDaysData.map((day) =>
+            day.day === editingDayChecklist
+              ? { ...day, checklist: items.map((item) => ({ ...item, from: item.from || "" })) }
+              : day
+          )
+        );
+      }
       showToast("Day 체크리스트가 저장되었어요");
     }
   };
@@ -543,6 +781,23 @@ export default function SCR05() {
         tripInfo={TRIP_INFO}
         rightButtons={
           <>
+            <button
+              onClick={() => setShowLegacyView((prev) => !prev)}
+              className="flex items-center gap-3 rounded-lg border border-[#E0E0E0] bg-white px-4 py-2 text-[13px] text-[#666] transition-colors hover:bg-[#F9F9F9]"
+            >
+              <span className="font-medium">{showLegacyView ? "기존 화면" : "새 화면"}</span>
+              <span
+                className={`relative h-6 w-11 rounded-full transition-colors ${
+                  showLegacyView ? "bg-[#534AB7]" : "bg-[#D6D6D6]"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                    showLegacyView ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </span>
+            </button>
             <Link
               href="/arrange"
               className="px-4 py-2 rounded-lg border border-[#E0E0E0] bg-white text-[#666] text-[13px] hover:bg-[#F9F9F9] transition-colors no-underline"
@@ -581,6 +836,7 @@ export default function SCR05() {
       />
 
       {/* Desktop Content - Two Column Layout */}
+      {showLegacyView ? (
       <div className="flex-1 flex">
         {/* Left Sidebar - Checklist */}
         <aside className="w-[340px] bg-white border-r border-[#EBEBEB] flex flex-col shrink-0">
@@ -853,6 +1109,289 @@ export default function SCR05() {
           </div>
         </main>
       </div>
+      ) : (
+        <div className="flex flex-1">
+          <aside className="w-[360px] shrink-0 border-r border-[#EBEBEB] bg-white">
+            <div className="border-b border-[#F0F0F0] p-6">
+              <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#8A84D6]">
+                Final Review
+              </p>
+              <h2 className="m-0 text-[20px] font-semibold text-[#1A1A1A]">확정 전 최종 점검</h2>
+              <p className="mt-2 text-[13px] leading-relaxed text-[#666]">
+                03과 04에서 수집된 카드 맥락, To-do, alert를 한 번에 점검하는 화면이에요.
+              </p>
+            </div>
+
+            <div className="space-y-6 overflow-y-auto p-6">
+              <section>
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="m-0 text-[15px] font-semibold text-[#1A1A1A]">여행 전반 체크리스트</h3>
+                  <button
+                    onClick={() => setEditModalOpen(true)}
+                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] text-[#666] transition-colors hover:bg-[#F5F5F5]"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    편집
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {visibleChecklist.map((item) => (
+                    <label
+                      key={item.id}
+                      className={`flex items-center gap-3 rounded-xl px-3 py-3 transition-colors ${
+                        checks[item.id] ? "bg-[#F0FDF4]" : "bg-[#FAFAFA]"
+                      }`}
+                    >
+                      <div
+                        onClick={() => toggleCheck(item.id)}
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${
+                          checks[item.id]
+                            ? "bg-[#534AB7]"
+                            : "border-[1.5px] border-[#D0D0D0] bg-white"
+                        }`}
+                      >
+                        {checks[item.id] && (
+                          <svg width="12" height="12" viewBox="0 0 24 24">
+                            <path d="M5 13l4 4L19 7" stroke="#fff" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </div>
+                      <span className={`flex-1 text-[14px] ${checks[item.id] ? "text-[#9CA3AF] line-through" : "text-[#333]"}`}>
+                        {item.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </section>
+
+              <section>
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="m-0 text-[15px] font-semibold text-[#1A1A1A]">Alert Cards</h3>
+                  <span className="rounded-full bg-[#EEF2FF] px-2.5 py-1 text-[11px] font-medium text-[#534AB7]">
+                    {FINAL_ALERT_CARDS.length}개
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {FINAL_ALERT_CARDS.map((alert) => (
+                    <div
+                      key={alert.id}
+                      className={`rounded-2xl border p-4 ${
+                        alert.type === "practical"
+                          ? "border-[#FED7AA] bg-[#FFF7ED]"
+                          : "border-[#C7D2FE] bg-[#EEF2FF]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                            alert.type === "practical"
+                              ? "bg-[#FFEDD5] text-[#C2410C]"
+                              : "bg-white text-[#534AB7]"
+                          }`}
+                        >
+                          {alert.title}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-[13px] leading-relaxed text-[#444]">{alert.message}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          </aside>
+
+          <main className="flex-1 overflow-y-auto bg-[#F7F7F5]">
+            <div className="p-8">
+              <div className="mb-6 rounded-3xl bg-[linear-gradient(135deg,#534AB7_0%,#7468E5_100%)] p-7 text-white shadow-lg">
+                <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.18em] text-white/75">
+                  Final Review
+                </p>
+                <h1 className="mt-2 text-[30px] font-semibold leading-tight">
+                  {TRIP_INFO.tripName}
+                </h1>
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-[14px] text-white/88">
+                  <span>{TRIP_INFO.destinations.join(", ")}</span>
+                  <span className="text-white/40">•</span>
+                  <span>{TRIP_INFO.travelers}명</span>
+                  <span className="text-white/40">•</span>
+                  <span>4박 5일</span>
+                </div>
+                <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  {FINAL_TRIP_CONTEXT.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-[2px]"
+                    >
+                      <p className="m-0 text-[12px] text-white/70">{item.label}</p>
+                      <p className="mt-2 text-[18px] font-semibold text-white">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-6 flex gap-2">
+                {FINAL_REVIEW_DAYS.map((day) => (
+                  <button
+                    key={day.day}
+                    onClick={() => setActiveDay(day.day)}
+                    className={`rounded-xl px-5 py-3 text-[14px] font-medium transition-all ${
+                      activeDay === day.day
+                        ? "bg-[#1A1A1A] text-white shadow-md"
+                        : "border border-[#E4E4E4] bg-white text-[#666] hover:bg-[#F9F9F9]"
+                    }`}
+                  >
+                    Day {day.day}
+                  </button>
+                ))}
+              </div>
+
+              {activeFinalDayData && (
+                <div className="space-y-5">
+                  <div className="rounded-3xl border border-[#E8E8E8] bg-white p-7 shadow-sm">
+                    <div className="flex items-start justify-between gap-6">
+                      <div>
+                        <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.16em] text-[#8B8B8B]">
+                          Day Summary
+                        </p>
+                        <h2 className="mt-2 text-[24px] font-semibold text-[#1A1A1A]">
+                          {activeFinalDayData.label}
+                        </h2>
+                        <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-[#666]">
+                          {activeFinalDayData.summary}
+                        </p>
+                      </div>
+                      <div className="grid shrink-0 gap-3 sm:grid-cols-2">
+                        <div className="rounded-2xl bg-[#F6F5FF] px-4 py-3 text-right">
+                          <p className="m-0 text-[12px] text-[#7A74C7]">총 이동시간</p>
+                          <p className="mt-1 text-[20px] font-semibold text-[#534AB7]">
+                            {activeFinalDayData.totalTravel}
+                          </p>
+                        </div>
+                        <div className="rounded-2xl bg-[#FFF7ED] px-4 py-3 text-right">
+                          <p className="m-0 text-[12px] text-[#C2410C]">총 소요시간</p>
+                          <p className="mt-1 text-[20px] font-semibold text-[#9A3412]">
+                            {activeFinalDayData.totalDuration}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-5 xl:grid-cols-[1.6fr_0.9fr]">
+                    <section className="rounded-3xl border border-[#E8E8E8] bg-white p-6 shadow-sm">
+                      <div className="mb-4 flex items-center justify-between">
+                        <h3 className="m-0 text-[17px] font-semibold text-[#1A1A1A]">카드 맥락 기반 일정</h3>
+                        <span className="text-[12px] text-[#888]">{activeFinalDayData.cards.length}개 카드</span>
+                      </div>
+
+                      {activeFinalDayData.cards.length > 0 ? (
+                        <div className="space-y-4">
+                          {activeFinalDayData.cards.map((card, index) => (
+                            <div key={card.id} className="rounded-2xl border border-[#ECECEC] bg-[#FCFCFC] p-4">
+                              <div className="flex items-start gap-4">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1A1A1A] text-[13px] font-semibold text-white">
+                                  {index + 1}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <p className="m-0 text-[16px] font-semibold text-[#1A1A1A]">{card.name}</p>
+                                    <span className="rounded-full bg-[#F2F2F2] px-2 py-0.5 text-[11px] text-[#666]">
+                                      {card.category}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1 text-[13px] text-[#888]">
+                                    {card.time} · {card.location}
+                                  </p>
+                                  {card.context && (
+                                    <div className="mt-3 rounded-xl bg-[#F6F5FF] px-3 py-2">
+                                      <p className="m-0 text-[11px] font-semibold text-[#7A74C7]">사용자 맥락</p>
+                                      <p className="mt-1 text-[13px] text-[#4C4794]">{card.context}</p>
+                                    </div>
+                                  )}
+                                  {card.tip && (
+                                    <div className="mt-2 rounded-xl bg-[#FFFBEB] px-3 py-2">
+                                      <p className="m-0 text-[11px] font-semibold text-[#A16207]">AI 팁</p>
+                                      <p className="mt-1 text-[13px] text-[#854D0E]">{card.tip}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl border border-dashed border-[#DDD] bg-[#FAFAFA] px-4 py-10 text-center text-[14px] text-[#999]">
+                          현재는 비워둔 완충 Day예요.
+                        </div>
+                      )}
+                    </section>
+
+                    <section className="space-y-5">
+                      <div className="rounded-3xl border border-[#E8E8E8] bg-white p-6 shadow-sm">
+                        <div className="mb-4 flex items-center justify-between">
+                          <h3 className="m-0 text-[17px] font-semibold text-[#1A1A1A]">Day 체크리스트</h3>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => setEditingDayChecklist(activeFinalDayData.day)}
+                              className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[12px] text-[#666] transition-colors hover:bg-[#F5F5F5]"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                              편집
+                            </button>
+                            <span className="text-[12px] text-[#888]">{activeFinalDayData.checklist.length}개</span>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          {activeFinalDayData.checklist.map((item) => (
+                            <label
+                              key={item.id}
+                              className={`flex items-start gap-3 rounded-2xl px-3 py-3 transition-colors ${
+                                dayChecks[item.id] ? "bg-[#F0FDF4]" : "bg-[#FAFAFA]"
+                              }`}
+                            >
+                              <div
+                                onClick={() => toggleDayCheck(item.id)}
+                                className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] ${
+                                  dayChecks[item.id]
+                                    ? "bg-[#16A34A]"
+                                    : "border-[1.5px] border-[#D0D0D0] bg-white"
+                                }`}
+                              >
+                                {dayChecks[item.id] && (
+                                  <svg width="10" height="10" viewBox="0 0 24 24">
+                                    <path d="M5 13l4 4L19 7" stroke="#fff" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <p className={`m-0 text-[14px] ${dayChecks[item.id] ? "text-[#9CA3AF] line-through" : "text-[#333]"}`}>
+                                  {item.label}
+                                </p>
+                                {item.from && <p className="mt-1 text-[11px] text-[#AAA]">{item.from}</p>}
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="rounded-3xl border border-[#E8E8E8] bg-white p-6 shadow-sm">
+                        <h3 className="m-0 text-[17px] font-semibold text-[#1A1A1A]">이 화면의 정체성</h3>
+                        <p className="mt-3 text-[14px] leading-relaxed text-[#666]">
+                          05는 일정표를 예쁘게 보여주는 단계가 아니라, 확정 직전에 놓치기 쉬운 실무 항목과 카드 맥락을 다시 묶어주는 단계예요.
+                        </p>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
+      )}
 
       {/* Toast */}
       {toast.visible && (
@@ -876,17 +1415,23 @@ export default function SCR05() {
         onClose={() => setEditingDayChecklist(null)}
         checklist={
           editingDayChecklist !== null
-            ? daysData.find((d) => d.day === editingDayChecklist)?.checklist || []
+            ? showLegacyView
+              ? daysData.find((d) => d.day === editingDayChecklist)?.checklist || []
+              : finalDaysData.find((d) => d.day === editingDayChecklist)?.checklist || []
             : []
         }
         onSave={handleSaveDayChecklist}
         title={`Day ${editingDayChecklist} 체크리스트 편집`}
         availablePlaces={
           editingDayChecklist !== null
-            ? daysData
-                .find((d) => d.day === editingDayChecklist)
-                ?.places.filter((p): p is { id: string; name: string; category: string; stay: number; startTime: string; remind: string[] } => "id" in p && "name" in p)
-                .map((p) => ({ id: p.id, name: p.name })) || []
+            ? showLegacyView
+              ? daysData
+                  .find((d) => d.day === editingDayChecklist)
+                  ?.places.filter((p): p is { id: string; name: string; category: string; stay: number; startTime: string; remind: string[] } => "id" in p && "name" in p)
+                  .map((p) => ({ id: p.id, name: p.name })) || []
+              : finalDaysData
+                  .find((d) => d.day === editingDayChecklist)
+                  ?.cards.map((card) => ({ id: card.id, name: card.name })) || []
             : []
         }
       />
