@@ -299,6 +299,10 @@ interface FinalReviewCard {
   location: string;
   context: string | null;
   tip: string | null;
+  mapPosition?: {
+    x: string;
+    y: string;
+  };
 }
 
 interface FinalReviewDay {
@@ -317,6 +321,14 @@ interface TripWideContextItem {
   value: string;
   tone: "violet" | "amber" | "emerald" | "slate";
 }
+
+const FINAL_DAY_COLORS: Record<number, { bg: string; soft: string; text: string }> = {
+  1: { bg: "#534AB7", soft: "#F3F1FE", text: "#534AB7" },
+  2: { bg: "#EA580C", soft: "#FFF7ED", text: "#C2410C" },
+  3: { bg: "#16A34A", soft: "#F0FDF4", text: "#166534" },
+  4: { bg: "#0284C7", soft: "#F0F9FF", text: "#0369A1" },
+  5: { bg: "#6B7280", soft: "#F3F4F6", text: "#4B5563" },
+};
 
 const FINAL_ALERT_CARDS: FinalAlertItem[] = [
   {
@@ -368,6 +380,7 @@ const FINAL_REVIEW_DAYS: FinalReviewDay[] = [
         location: "오사카",
         context: "오사카 숙소로 난바 근처를 잡았어요",
         tip: null,
+        mapPosition: { x: "56%", y: "58%" },
       },
       {
         id: "fr2",
@@ -377,6 +390,7 @@ const FINAL_REVIEW_DAYS: FinalReviewDay[] = [
         location: "오사카",
         context: "도톤보리 맛집 여러 곳 둘러볼 예정",
         tip: "저녁 시간대는 웨이팅이 길 수 있어요",
+        mapPosition: { x: "58%", y: "60%" },
       },
       {
         id: "fr3",
@@ -386,6 +400,7 @@ const FINAL_REVIEW_DAYS: FinalReviewDay[] = [
         location: "오사카",
         context: null,
         tip: "날씨 맑은 날 방문 추천",
+        mapPosition: { x: "61%", y: "63%" },
       },
     ],
     checklist: [
@@ -408,6 +423,7 @@ const FINAL_REVIEW_DAYS: FinalReviewDay[] = [
         location: "오사카",
         context: "하루 종일 놀 예정이에요",
         tip: "오픈런 추천, 인기 어트랙션은 오전에 먼저 방문하세요",
+        mapPosition: { x: "46%", y: "56%" },
       },
       {
         id: "fr5",
@@ -417,6 +433,7 @@ const FINAL_REVIEW_DAYS: FinalReviewDay[] = [
         location: "오사카",
         context: null,
         tip: "오후에는 문 닫는 가게가 많아요",
+        mapPosition: { x: "59%", y: "57%" },
       },
     ],
     checklist: [
@@ -439,6 +456,7 @@ const FINAL_REVIEW_DAYS: FinalReviewDay[] = [
         location: "교토",
         context: null,
         tip: "이른 아침 방문 시 한산해요",
+        mapPosition: { x: "73%", y: "41%" },
       },
       {
         id: "fr7",
@@ -448,6 +466,7 @@ const FINAL_REVIEW_DAYS: FinalReviewDay[] = [
         location: "교토",
         context: null,
         tip: null,
+        mapPosition: { x: "76%", y: "46%" },
       },
       {
         id: "fr8",
@@ -457,6 +476,7 @@ const FINAL_REVIEW_DAYS: FinalReviewDay[] = [
         location: "나라",
         context: null,
         tip: "사슴 전용 과자 판매소 근처는 혼잡할 수 있어요",
+        mapPosition: { x: "86%", y: "54%" },
       },
     ],
     checklist: [
@@ -479,6 +499,7 @@ const FINAL_REVIEW_DAYS: FinalReviewDay[] = [
         location: "교토",
         context: "교토 숙소로 게스트하우스 예정",
         tip: null,
+        mapPosition: { x: "75%", y: "48%" },
       },
       {
         id: "fr10",
@@ -488,6 +509,7 @@ const FINAL_REVIEW_DAYS: FinalReviewDay[] = [
         location: "간사이 공항",
         context: null,
         tip: null,
+        mapPosition: { x: "33%", y: "79%" },
       },
     ],
     checklist: [
@@ -709,6 +731,8 @@ export default function SCR05() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingDayChecklist, setEditingDayChecklist] = useState<number | null>(null);
   const [showLegacyView, setShowLegacyView] = useState(true);
+  const [finalReviewView, setFinalReviewView] = useState<"schedule" | "map">("schedule");
+  const [mapSelectedDay, setMapSelectedDay] = useState<number | null>(null);
 
   const showToast = (msg: string) => {
     setToast({ visible: true, message: msg });
@@ -804,33 +828,6 @@ export default function SCR05() {
             >
               배치로 돌아가기
             </Link>
-            <button
-              onClick={handleExportPDF}
-              disabled={exporting}
-              className={`px-4 py-2 rounded-lg border-none bg-[#1A1A1A] text-white text-[13px] font-medium flex items-center gap-2 transition-opacity ${
-                exporting ? "opacity-70 cursor-default" : "cursor-pointer hover:bg-[#333]"
-              }`}
-            >
-              {exporting ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" className="animate-spin">
-                  <circle cx="12" cy="12" r="10" fill="none" stroke="#fff" strokeWidth="2.5" strokeDasharray="15 55" strokeLinecap="round"/>
-                </svg>
-              ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              )}
-              {exporting ? "생성 중..." : "PDF 다운로드"}
-            </button>
-            <button
-              onClick={handleShare}
-              className="px-4 py-2 rounded-lg border-none bg-[#534AB7] text-white text-[13px] font-medium cursor-pointer flex items-center gap-2 hover:bg-[#4840A0] transition-colors"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M4 12v6a2 2 0 002 2h12a2 2 0 002-2v-6M16 6l-4-4-4 4M12 2v13" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              공유하기
-            </button>
           </>
         }
       />
@@ -1231,13 +1228,17 @@ export default function SCR05() {
                 </div>
               </div>
 
-              <div className="mb-6 flex gap-2">
-                {FINAL_REVIEW_DAYS.map((day) => (
+              <div className="mb-6 flex items-center justify-between gap-4">
+                <div className="flex gap-2">
+                {finalDaysData.map((day) => (
                   <button
                     key={day.day}
-                    onClick={() => setActiveDay(day.day)}
+                    onClick={() => {
+                      setActiveDay(day.day);
+                      setFinalReviewView("schedule");
+                    }}
                     className={`rounded-xl px-5 py-3 text-[14px] font-medium transition-all ${
-                      activeDay === day.day
+                      activeDay === day.day && finalReviewView === "schedule"
                         ? "bg-[#1A1A1A] text-white shadow-md"
                         : "border border-[#E4E4E4] bg-white text-[#666] hover:bg-[#F9F9F9]"
                     }`}
@@ -1245,9 +1246,145 @@ export default function SCR05() {
                     Day {day.day}
                   </button>
                 ))}
+                </div>
+                <button
+                  onClick={() => {
+                    setFinalReviewView("map");
+                    setMapSelectedDay(null);
+                  }}
+                  className={`flex items-center gap-2 rounded-xl px-5 py-3 text-[14px] font-medium transition-all ${
+                    finalReviewView === "map"
+                      ? "bg-[#1A1A1A] text-white shadow-md"
+                      : "border border-[#E4E4E4] bg-white text-[#666] hover:bg-[#F9F9F9]"
+                  }`}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M1 6l7-2 8 2 7-2v14l-7 2-8-2-7 2V6z" />
+                    <path d="M8 4v16M16 6v16" />
+                  </svg>
+                  지도
+                </button>
               </div>
 
-              {activeFinalDayData && (
+              {finalReviewView === "map" ? (
+                <div className="space-y-5">
+                  <div className="rounded-3xl border border-[#E8E8E8] bg-white p-6 shadow-sm">
+                    <div className="mb-4 flex items-center justify-between">
+                      <div>
+                        <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.16em] text-[#8B8B8B]">
+                          Map View
+                        </p>
+                        <h2 className="mt-2 text-[24px] font-semibold text-[#1A1A1A]">
+                          Day별 여행지 지도
+                        </h2>
+                        <p className="mt-2 text-[14px] text-[#666]">
+                          각 Day의 여행지를 핀으로 겹쳐서 보고, 색상 배지를 누르면 해당 Day만 따로 볼 수 있어요.
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <button
+                          onClick={() => setMapSelectedDay(null)}
+                          className={`rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors ${
+                            mapSelectedDay === null
+                              ? "bg-[#1A1A1A] text-white"
+                              : "bg-[#F3F4F6] text-[#666] hover:bg-[#EAEAEA]"
+                          }`}
+                        >
+                          전체
+                        </button>
+                        {finalDaysData.map((day) => (
+                          <button
+                            key={`legend-${day.day}`}
+                            onClick={() => {
+                              setActiveDay(day.day);
+                              setMapSelectedDay((prev) => (prev === day.day ? null : day.day));
+                            }}
+                            className="rounded-full px-3 py-1.5 text-[12px] font-medium transition-all"
+                            style={{
+                              backgroundColor:
+                                mapSelectedDay === day.day
+                                  ? FINAL_DAY_COLORS[day.day].bg
+                                  : FINAL_DAY_COLORS[day.day].soft,
+                              color:
+                                mapSelectedDay === day.day
+                                  ? "#FFFFFF"
+                                  : FINAL_DAY_COLORS[day.day].text,
+                              boxShadow:
+                                mapSelectedDay === day.day
+                                  ? `0 10px 20px -12px ${FINAL_DAY_COLORS[day.day].bg}`
+                                  : "none",
+                            }}
+                          >
+                            Day {day.day}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="relative overflow-hidden rounded-[28px] border border-[#E8E8E8] bg-[radial-gradient(circle_at_top_left,#ffffff_0%,#f5f5f3_48%,#ecece8_100%)]">
+                      <div className="absolute inset-0 opacity-60">
+                        <div className="absolute left-[18%] top-[16%] h-40 w-40 rounded-full bg-[#EEF2FF]" />
+                        <div className="absolute left-[52%] top-[10%] h-48 w-48 rounded-full bg-[#F0FDF4]" />
+                        <div className="absolute left-[68%] top-[42%] h-44 w-44 rounded-full bg-[#FFF7ED]" />
+                        <div className="absolute left-[30%] top-[62%] h-36 w-36 rounded-full bg-[#F0F9FF]" />
+                      </div>
+
+                      <div className="relative h-[520px]">
+                        <div className="absolute left-[20%] top-[22%] text-[13px] font-semibold text-[#999]">오사카</div>
+                        <div className="absolute left-[72%] top-[28%] text-[13px] font-semibold text-[#999]">교토</div>
+                        <div className="absolute left-[84%] top-[46%] text-[13px] font-semibold text-[#999]">나라</div>
+                        <div className="absolute left-[29%] top-[72%] text-[13px] font-semibold text-[#999]">간사이 공항</div>
+
+                        {finalDaysData
+                          .filter((day) => mapSelectedDay == null || day.day === mapSelectedDay)
+                          .flatMap((day) =>
+                          day.cards
+                            .filter((card) => card.mapPosition)
+                            .map((card) => {
+                              const pinColor = FINAL_DAY_COLORS[day.day];
+
+                              return (
+                                <button
+                                  key={card.id}
+                                  onClick={() => {
+                                    setActiveDay(day.day);
+                                    setFinalReviewView("schedule");
+                                  }}
+                                  className="group absolute -translate-x-1/2 -translate-y-full"
+                                  style={{
+                                    left: card.mapPosition?.x,
+                                    top: card.mapPosition?.y,
+                                  }}
+                                >
+                                  <div className="relative flex flex-col items-center">
+                                    <div
+                                      className="flex h-11 w-11 items-center justify-center rounded-full border-4 border-white text-[12px] font-bold text-white shadow-lg transition-transform group-hover:scale-105"
+                                      style={{ backgroundColor: pinColor.bg }}
+                                    >
+                                      {day.day}
+                                    </div>
+                                    <div
+                                      className="h-4 w-4 -translate-y-2 rotate-45 rounded-[3px] border-b-4 border-r-4 border-white"
+                                      style={{ backgroundColor: pinColor.bg }}
+                                    />
+                                  </div>
+                                  <div className="mt-1 rounded-xl bg-white/95 px-3 py-2 text-left shadow-md">
+                                    <p className="m-0 text-[11px] font-semibold" style={{ color: pinColor.text }}>
+                                      Day {day.day}
+                                    </p>
+                                    <p className="mt-0.5 text-[12px] font-medium text-[#1A1A1A]">{card.name}</p>
+                                    <p className="mt-0.5 text-[11px] text-[#888]">{card.time} · {card.location}</p>
+                                  </div>
+                                </button>
+                              );
+                            })
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+              activeFinalDayData && (
                 <div className="space-y-5">
                   <div className="rounded-3xl border border-[#E8E8E8] bg-white p-7 shadow-sm">
                     <div className="flex items-start justify-between gap-6">
@@ -1383,11 +1520,40 @@ export default function SCR05() {
                         <p className="mt-3 text-[14px] leading-relaxed text-[#666]">
                           05는 일정표를 예쁘게 보여주는 단계가 아니라, 확정 직전에 놓치기 쉬운 실무 항목과 카드 맥락을 다시 묶어주는 단계예요.
                         </p>
+                        <div className="mt-5 flex flex-wrap gap-3">
+                          <button
+                            onClick={handleExportPDF}
+                            disabled={exporting}
+                            className={`rounded-xl border-none bg-[#1A1A1A] px-4 py-2.5 text-[13px] font-medium text-white flex items-center gap-2 transition-opacity ${
+                              exporting ? "opacity-70 cursor-default" : "cursor-pointer hover:bg-[#333]"
+                            }`}
+                          >
+                            {exporting ? (
+                              <svg width="14" height="14" viewBox="0 0 24 24" className="animate-spin">
+                                <circle cx="12" cy="12" r="10" fill="none" stroke="#fff" strokeWidth="2.5" strokeDasharray="15 55" strokeLinecap="round"/>
+                              </svg>
+                            ) : (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            )}
+                            {exporting ? "생성 중..." : "저장하기"}
+                          </button>
+                          <button
+                            onClick={handleShare}
+                            className="rounded-xl border-none bg-[#534AB7] px-4 py-2.5 text-[13px] font-medium text-white cursor-pointer flex items-center gap-2 hover:bg-[#4840A0] transition-colors"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                              <path d="M4 12v6a2 2 0 002 2h12a2 2 0 002-2v-6M16 6l-4-4-4 4M12 2v13" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            공유하기
+                          </button>
+                        </div>
                       </div>
                     </section>
                   </div>
                 </div>
-              )}
+              ))}
             </div>
           </main>
         </div>

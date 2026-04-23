@@ -1,8 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { MainHeader, SubHeader } from "@/components/header";
+import { AddTripCardDialog } from "@/components/trip/AddTripCardDialog";
+import {
+  createProcessingTripCard,
+  finalizeProcessingTripCard,
+  NewTripCardInput,
+} from "@/components/trip/addCardUtils";
 import { TripCard } from "@/components/trip/TripCard";
 import { TripCardDetailPanel } from "@/components/trip/TripCardDetailPanel";
 import { canOpenTripCardDetail } from "@/components/trip/tripCardState";
@@ -68,10 +74,10 @@ const DEMO_CARDS: TripCardData[] = [
     place_id: null,
     name: "교토 게스트하우스",
     category: "accommodation",
-    classification: "confirmed",
-    placement_status: "ready",
-    processing_status: "pending",
-    action_type: "review_only",
+    classification: "open_question",
+    placement_status: "ready_partial",
+    processing_status: "completed",
+    action_type: "input_required",
     can_exclude: false,
     allow_duplicate: true,
     is_excluded: false,
@@ -79,11 +85,11 @@ const DEMO_CARDS: TripCardData[] = [
     estimated_duration_min: 0,
     coordinates: null,
     time_constraint: null,
-    question_text: null,
+    question_text: "아직 게스트하우스를 예약 안하셨어요.",
     options: null,
     blocked_reason: null,
     user_context: "교토 숙소로 게스트하우스 예정",
-    tips: null,
+    tips: "예약한 숙소 주소를 입력하면 이후 배치가 쉬워져요",
     tags: ["숙소", "교토"],
     source: "dump",
     day: null,
@@ -122,14 +128,14 @@ const DEMO_CARDS: TripCardData[] = [
     place_id: null,
     name: "도톤보리 맛집 투어",
     category: "food",
-    classification: "open_question",
+    classification: "undecided",
     placement_status: "ready_partial",
     processing_status: "completed",
     action_type: "select_required",
     can_exclude: true,
     allow_duplicate: false,
     is_excluded: false,
-    is_ai_generated: true,
+    is_ai_generated: false,
     estimated_duration_min: 120,
     coordinates: { lat: 34.6687, lng: 135.5013 },
     time_constraint: null,
@@ -149,11 +155,41 @@ const DEMO_CARDS: TripCardData[] = [
     location: "도톤보리",
   },
   {
+    instance_id: "org-13",
+    place_id: "glico-sign-osaka",
+    name: "글리코상",
+    category: "place",
+    classification: "open_question",
+    placement_status: "ready_partial",
+    processing_status: "completed",
+    action_type: "select_required",
+    can_exclude: true,
+    allow_duplicate: false,
+    is_excluded: false,
+    is_ai_generated: false,
+    estimated_duration_min: 20,
+    coordinates: { lat: 34.6686, lng: 135.5019 },
+    time_constraint: null,
+    question_text: "궁금한 내용: 글리코상에 가서 사진을 찍으실지 고민중이세요.",
+    options: [
+      { id: "glico-no", label: "안 간다" },
+      { id: "glico-yes", label: "간다" },
+    ],
+    blocked_reason: null,
+    user_context: "궁금한 내용: 글리코상에 가서 사진을 찍으실지 고민중이세요.",
+    tips: "도톤보리 동선과 함께 넣으면 짧게 들르기 좋아요",
+    tags: ["오사카", "도톤보리", "포토스팟"],
+    source: "dump",
+    day: null,
+    notes: null,
+    location: "도톤보리",
+  },
+  {
     instance_id: "org-12",
     place_id: null,
     name: "아라시야마 대나무숲",
     category: "place",
-    classification: "undecided",
+    classification: "open_question",
     placement_status: "ready_partial",
     processing_status: "completed",
     action_type: "select_required",
@@ -164,16 +200,16 @@ const DEMO_CARDS: TripCardData[] = [
     estimated_duration_min: 60,
     coordinates: { lat: 35.0094, lng: 135.6722 },
     time_constraint: null,
-    question_text: "아라시야마 대나무숲을 일정에 포함할까요?",
+    question_text: "AI가 생성한 장소예요. 실제로 존재하는지 확인해주세요.",
     options: [
-      { id: "bamboo-1", label: "포함할게요" },
-      { id: "bamboo-2", label: "다른 날로 미룰게요" },
+      { id: "bamboo-1", label: "실제로 있는 장소예요" },
+      { id: "bamboo-2", label: "조금 더 확인이 필요해요" },
       { id: "bamboo-3", label: "제외할게요" },
     ],
     blocked_reason: null,
-    user_context: null,
-    tips: "이른 아침 방문 시 한산해요",
-    tags: ["교토", "자연"],
+    user_context: "AI가 교토 자연 명소 후보로 제안했어요",
+    tips: "실제 장소 확인 후 포함 여부를 정하면 돼요",
+    tags: ["교토", "자연", "AI 후보"],
     source: "dump",
     day: null,
     notes: null,
@@ -182,25 +218,25 @@ const DEMO_CARDS: TripCardData[] = [
   {
     instance_id: "org-4",
     place_id: null,
-    name: "오사카성",
+    name: "와사카 성",
     category: "place",
-    classification: "undecided",
+    classification: "open_question",
     placement_status: "blocked",
     processing_status: "failed",
     action_type: "fix_required",
     can_exclude: true,
     allow_duplicate: false,
     is_excluded: false,
-    is_ai_generated: false,
+    is_ai_generated: true,
     estimated_duration_min: null,
     coordinates: null,
     time_constraint: null,
-    question_text: "방문 목적이나 희망 시간을 다시 입력해주세요",
+    question_text: "오타인 것 같아요. 실제 장소명을 확인해주세요.",
     options: null,
-    blocked_reason: "방문 시간 정보가 누락되었어요",
-    user_context: null,
-    tips: null,
-    tags: ["오사카"],
+    blocked_reason: "오타인 것 같아요",
+    user_context: "AI가 장소명을 잘못 해석했을 가능성이 있어요",
+    tips: "정확한 장소명으로 수정하면 이후 배치가 쉬워져요",
+    tags: ["오사카", "AI 후보"],
     source: "dump",
     day: null,
     notes: null,
@@ -276,9 +312,9 @@ const GROUP_META = {
   select_required: {
     title: "선택이 필요한 카드들",
     countLabel: "선택이 필요해요",
-    bg: "#FEF3C7",
+    bg: "#DBEAFE",
     icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2">
         <circle cx="12" cy="12" r="10" />
         <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3m.08 4h.01" />
       </svg>
@@ -320,10 +356,22 @@ const GROUP_META = {
 
 type GroupKey = keyof typeof GROUP_META;
 
+function matchesDestination(card: TripCardData, destination: string | null) {
+  if (!destination) return true;
+
+  return (
+    card.location?.includes(destination) ||
+    card.tags?.some((tag) => tag.includes(destination)) ||
+    false
+  );
+}
+
 export default function OrganizePage() {
   const [cards, setCards] = useState<TripCardData[]>(DEMO_CARDS);
   const [selectedCard, setSelectedCard] = useState<TripCardData | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [destinationFilter, setDestinationFilter] = useState<string | null>(null);
+  const [addCardOpen, setAddCardOpen] = useState(false);
   const currentStep = 3;
 
   const [expandedGroups, setExpandedGroups] = useState<Record<GroupKey, boolean>>({
@@ -335,8 +383,8 @@ export default function OrganizePage() {
   });
 
   const groupedCards = useMemo(() => {
-    const activeCards = cards.filter((c) => !c.is_excluded);
-    const excludedCards = cards.filter((c) => c.is_excluded);
+    const activeCards = cards.filter((c) => !c.is_excluded && matchesDestination(c, destinationFilter));
+    const excludedCards = cards.filter((c) => c.is_excluded && matchesDestination(c, destinationFilter));
     const sortedExcludedCards = [...excludedCards].sort((left, right) => {
       if (left.classification === "unassigned" && right.classification !== "unassigned") {
         return 1;
@@ -355,7 +403,7 @@ export default function OrganizePage() {
       review_only: activeCards.filter((c) => c.action_type === "review_only"),
       excluded: sortedExcludedCards,
     };
-  }, [cards]);
+  }, [cards, destinationFilter]);
 
   const readyProgress = useMemo(() => {
     const activeCards = cards.filter((c) => !c.is_excluded);
@@ -400,6 +448,31 @@ export default function OrganizePage() {
     );
     setSelectedCard(updatedCard);
   };
+
+  const handleAddCard = (input: NewTripCardInput) => {
+    setCards((prev) => [...prev, createProcessingTripCard("org-add", input)]);
+  };
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setCards((prev) =>
+        prev.map((card) => {
+          if (
+            card.source === "manual" &&
+            card.processing_status === "processing" &&
+            card.processing_started_at &&
+            Date.now() - card.processing_started_at >= 2500
+          ) {
+            return finalizeProcessingTripCard(card);
+          }
+
+          return card;
+        })
+      );
+    }, 1500);
+
+    return () => window.clearInterval(interval);
+  }, []);
 
   const renderGroupSection = (key: GroupKey, cardsInGroup: TripCardData[]) => {
     if (cardsInGroup.length === 0) return null;
@@ -464,6 +537,18 @@ export default function OrganizePage() {
           startDate: "5월 10일",
           endDate: "5월 14일",
         }}
+        destinationFilter={{
+          activeDestination: destinationFilter,
+          onSelectDestination: setDestinationFilter,
+        }}
+        rightButtons={
+          <button
+            onClick={() => setAddCardOpen(true)}
+            className="rounded-lg bg-[#534AB7] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#4840A0]"
+          >
+            카드 추가하기
+          </button>
+        }
       />
 
       <div className="flex-1 px-8 py-10 lg:px-12">
@@ -490,6 +575,11 @@ export default function OrganizePage() {
                   <p className="mt-2 text-xs text-[#888]">
                     활성 카드 {cards.filter((card) => !card.is_excluded).length}개 중 {groupedCards.review_only.length}개 확인 완료
                   </p>
+                  {destinationFilter && (
+                    <p className="mt-2 text-xs font-medium text-[#534AB7]">
+                      현재 {destinationFilter} 관련 카드만 보고 있어요
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -657,6 +747,12 @@ export default function OrganizePage() {
         open={panelOpen}
         onOpenChange={setPanelOpen}
         onUpdateCard={handleUpdateCard}
+      />
+
+      <AddTripCardDialog
+        open={addCardOpen}
+        onOpenChange={setAddCardOpen}
+        onSubmit={handleAddCard}
       />
     </div>
   );

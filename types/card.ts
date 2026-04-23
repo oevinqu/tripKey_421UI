@@ -49,6 +49,10 @@ export interface TripCardData {
   source: string | null;
   day: number | null;
   notes: string | null;
+  memo?: string | null;
+  group_label?: string;
+  group_reason?: string;
+  processing_started_at?: number | null;
 
   // 기존 UI에서 사용 중인 선택 필드
   location?: string;
@@ -67,8 +71,8 @@ export interface CardGroup {
 // 분류별 색상 매핑
 export const CLASSIFICATION_COLORS: Record<Classification, { bg: string; text: string; border: string }> = {
   confirmed: { bg: "#DCFCE7", text: "#166534", border: "#22C55E" },
-  open_question: { bg: "#FEF3C7", text: "#92400E", border: "#F59E0B" },
-  undecided: { bg: "#DBEAFE", text: "#1E40AF", border: "#3B82F6" },
+  open_question: { bg: "#DBEAFE", text: "#1E40AF", border: "#3B82F6" },
+  undecided: { bg: "#FEF3C7", text: "#92400E", border: "#F59E0B" },
   unassigned: { bg: "#F3F4F6", text: "#4B5563", border: "#9CA3AF" },
 };
 

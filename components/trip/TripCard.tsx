@@ -41,17 +41,15 @@ export function TripCard({
   allowExcludedClick = false,
 }: TripCardProps) {
   const classificationColor = CLASSIFICATION_COLORS[card.classification];
+  const cardAccentColor =
+    card.action_type === "select_required"
+      ? "#3B82F6"
+      : classificationColor.border;
   const categoryConfig = CATEGORY_CONFIG[card.category];
   const estimatedDurationLabel = formatEstimatedDuration(card.estimated_duration_min);
   
-  const isBlocked = card.placement_status === "blocked";
-  const isNeedsInput = card.placement_status === "needs_input";
   const isProcessing = card.processing_status === "processing";
   const isExcluded = card.is_excluded;
-  const needsAttention =
-    card.placement_status === "ready_partial" ||
-    card.placement_status === "blocked" ||
-    card.placement_status === "needs_input";
   const isClickable = canOpenTripCardDetail(card) && (!isExcluded || allowExcludedClick);
   const disabledReason = getTripCardDetailLockReason(card);
 
@@ -121,7 +119,7 @@ export function TripCard({
       {/* 좌측 색상 바 */}
       <div
         className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
-        style={{ backgroundColor: classificationColor.border }}
+        style={{ backgroundColor: cardAccentColor }}
       />
 
       {/* 로딩 오버레이 */}
@@ -146,10 +144,25 @@ export function TripCard({
 
               <div className="flex-1" />
 
-              <span className="flex shrink-0 items-center gap-1 text-xs text-[#888]">
-                {renderCategoryIcon()}
-                {categoryConfig.label}
-              </span>
+              <div className="flex shrink-0 items-center gap-2">
+                {card.processing_status === "failed" && (
+                  <span className="flex items-center gap-1 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-xs font-medium text-[#DC2626]">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                    실패
+                  </span>
+                )}
+                {card.is_ai_generated && (
+                  <span className="rounded-full bg-[#EEF2FF] px-2 py-0.5 text-xs font-medium text-[#534AB7]">
+                    AI
+                  </span>
+                )}
+                <span className="flex items-center gap-1 text-xs text-[#888]">
+                  {renderCategoryIcon()}
+                  {categoryConfig.label}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -159,22 +172,6 @@ export function TripCard({
               <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-[#EEF2FF] text-[#534AB7]">
                 <div className="w-2 h-2 border border-[#534AB7] border-t-transparent rounded-full animate-spin" />
                 처리 중
-              </span>
-            )}
-            {card.processing_status === "pending" && (
-              <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#92400E]">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="12" r="10" />
-                </svg>
-                대기 중
-              </span>
-            )}
-            {card.processing_status === "failed" && (
-              <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-[#FEE2E2] text-[#DC2626]">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-                실패
               </span>
             )}
             {isExcluded && (
@@ -188,25 +185,6 @@ export function TripCard({
             )}
           </div>
 
-          {/* 경고/주의 아이콘 */}
-          {needsAttention && (
-            <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                isBlocked ? "bg-[#FEE2E2]" : isNeedsInput ? "bg-[#FFEDD5]" : "bg-[#FEF3C7]"
-              }`}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={isBlocked ? "#DC2626" : isNeedsInput ? "#EA580C" : "#F59E0B"}
-                strokeWidth="2"
-              >
-                <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          )}
         </div>
 
         {/* 부가 정보 */}

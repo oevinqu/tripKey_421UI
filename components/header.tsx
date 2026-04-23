@@ -100,49 +100,103 @@ interface SubHeaderProps {
     endDate: string;
   };
   rightButtons?: React.ReactNode;
+  destinationFilter?: {
+    activeDestination: string | null;
+    onSelectDestination: (destination: string | null) => void;
+  };
 }
 
 // 여러 지역 표시 컴포넌트
-function DestinationDisplay({ destinations }: { destinations: string[] }) {
+function DestinationDisplay({
+  destinations,
+  destinationFilter,
+}: {
+  destinations: string[];
+  destinationFilter?: SubHeaderProps["destinationFilter"];
+}) {
   const [isHovered, setIsHovered] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setIsHovered(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   
   // 가나다순 정렬
   const sortedDestinations = [...destinations].sort((a, b) => a.localeCompare(b, 'ko'));
-  const firstDestination = sortedDestinations[0];
+  const firstDestination = destinationFilter?.activeDestination ?? sortedDestinations[0];
   const remainingCount = sortedDestinations.length - 1;
+  const isFiltered = Boolean(destinationFilter?.activeDestination);
 
   return (
     <div 
+      ref={wrapperRef}
       className="relative flex items-center gap-1.5"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[#666] shrink-0">
-        <path d="M12 12.5C13.1046 12.5 14 11.6046 14 10.5C14 9.39543 13.1046 8.5 12 8.5C10.8954 8.5 10 9.39543 10 10.5C10 11.6046 10.8954 12.5 12 12.5Z" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M12 21C12 21 18 15.5 18 10.5C18 7.18629 15.3137 4.5 12 4.5C8.68629 4.5 6 7.18629 6 10.5C6 15.5 12 21 12 21Z" stroke="currentColor" strokeWidth="1.5" />
-      </svg>
-      <span className="font-medium text-sm text-[#666]">{firstDestination}</span>
-      {remainingCount > 0 && (
-        <span className="px-1.5 py-0.5 bg-[#F3F1FE] text-[#534AB7] text-xs font-medium rounded-full">
-          +{remainingCount}
-        </span>
-      )}
+      <button
+        onClick={() => setIsHovered((prev) => !prev)}
+        className="flex items-center gap-1.5 rounded-lg px-1.5 py-1 transition-colors hover:bg-[#F8F8F8]"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[#666] shrink-0">
+          <path d="M12 12.5C13.1046 12.5 14 11.6046 14 10.5C14 9.39543 13.1046 8.5 12 8.5C10.8954 8.5 10 9.39543 10 10.5C10 11.6046 10.8954 12.5 12 12.5Z" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M12 21C12 21 18 15.5 18 10.5C18 7.18629 15.3137 4.5 12 4.5C8.68629 4.5 6 7.18629 6 10.5C6 15.5 12 21 12 21Z" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+        <span className="font-medium text-sm text-[#666]">{firstDestination}</span>
+        {sortedDestinations.length > 1 && (
+          <span
+            className={`px-1.5 py-0.5 text-xs font-medium rounded-full ${
+              isFiltered ? "bg-[#534AB7] text-white" : "bg-[#F3F1FE] text-[#534AB7]"
+            }`}
+          >
+            {isFiltered ? "필터됨" : `+${remainingCount}`}
+          </span>
+        )}
+      </button>
       
       {/* 호버 시 전체 지역 목록 표시 */}
-      {isHovered && remainingCount > 0 && (
+      {isHovered && sortedDestinations.length > 1 && (
         <div className="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-[#EBEBEB] py-2 z-50 min-w-[160px] animate-in fade-in slide-in-from-top-2 duration-150">
-          <p className="px-3 py-1.5 text-xs text-[#999] font-medium">선택된 지역</p>
+          <p className="px-3 py-1.5 text-xs text-[#999] font-medium">지역 필터</p>
+          {destinationFilter && (
+            <button
+              onClick={() => {
+                destinationFilter.onSelectDestination(null);
+                setIsHovered(false);
+              }}
+              className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                destinationFilter.activeDestination === null
+                  ? "bg-[#F3F1FE] text-[#534AB7]"
+                  : "text-[#333] hover:bg-[#F9F9F9]"
+              }`}
+            >
+              전체 보기
+            </button>
+          )}
           {sortedDestinations.map((dest, idx) => (
-            <div 
+            <button
               key={idx} 
-              className="px-3 py-2 flex items-center gap-2 text-sm text-[#333] hover:bg-[#F9F9F9]"
+              onClick={() => {
+                destinationFilter?.onSelectDestination(dest);
+                setIsHovered(false);
+              }}
+              className={`w-full px-3 py-2 flex items-center gap-2 text-sm text-left transition-colors ${
+                destinationFilter?.activeDestination === dest
+                  ? "bg-[#F3F1FE] text-[#534AB7]"
+                  : "text-[#333] hover:bg-[#F9F9F9]"
+              }`}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-[#534AB7]">
                 <path d="M12 12.5C13.1046 12.5 14 11.6046 14 10.5C14 9.39543 13.1046 8.5 12 8.5C10.8954 8.5 10 9.39543 10 10.5C10 11.6046 10.8954 12.5 12 12.5Z" stroke="currentColor" strokeWidth="1.5" />
                 <path d="M12 21C12 21 18 15.5 18 10.5C18 7.18629 15.3137 4.5 12 4.5C8.68629 4.5 6 7.18629 6 10.5C6 15.5 12 21 12 21Z" stroke="currentColor" strokeWidth="1.5" />
               </svg>
               {dest}
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -150,14 +204,14 @@ function DestinationDisplay({ destinations }: { destinations: string[] }) {
   );
 }
 
-export function SubHeader({ currentStep, tripInfo, rightButtons }: SubHeaderProps) {
+export function SubHeader({ currentStep, tripInfo, rightButtons, destinationFilter }: SubHeaderProps) {
   return (
     <div className="h-14 bg-white border-b border-[#EBEBEB] px-8 lg:px-12 flex items-center justify-between sticky top-16 z-40">
       {/* 왼쪽: 여행 정보 (tripInfo가 있을 때만 표시) */}
       <div className="flex items-center gap-4 min-w-[280px]">
         {tripInfo ? (
           <>
-            <DestinationDisplay destinations={tripInfo.destinations} />
+            <DestinationDisplay destinations={tripInfo.destinations} destinationFilter={destinationFilter} />
             <div className="w-px h-4 bg-[#E0E0E0]" />
             <div className="flex items-center gap-1.5 text-sm text-[#666]">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">

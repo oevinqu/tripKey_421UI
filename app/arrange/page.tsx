@@ -3,6 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { MainHeader, SubHeader } from "@/components/header";
+import { AddTripCardDialog } from "@/components/trip/AddTripCardDialog";
+import {
+  createProcessingTripCard,
+  finalizeProcessingTripCard,
+  NewTripCardInput,
+} from "@/components/trip/addCardUtils";
 import { TripCard } from "@/components/trip/TripCard";
 import { TripCardDetailPanel } from "@/components/trip/TripCardDetailPanel";
 import { TripCardData } from "@/types/card";
@@ -37,168 +43,6 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
   },
   {
     instance_id: "arr-2",
-    place_id: null,
-    name: "도톤보리 맛집 투어",
-    category: "food",
-    classification: "confirmed",
-    placement_status: "ready",
-    processing_status: "completed",
-    action_type: "review_only",
-    can_exclude: true,
-    allow_duplicate: false,
-    is_excluded: false,
-    is_ai_generated: true,
-    estimated_duration_min: 120,
-    coordinates: { lat: 34.6687, lng: 135.5013 },
-    time_constraint: null,
-    question_text: null,
-    options: null,
-    blocked_reason: null,
-    user_context: "도톤보리 맛집 여러 곳 둘러볼 예정",
-    tips: "저녁 시간대는 웨이팅이 길 수 있어요",
-    tags: ["맛집", "도톤보리", "오사카"],
-    source: "dump",
-    day: null,
-    notes: null,
-    location: "오사카",
-  },
-  {
-    instance_id: "arr-3",
-    place_id: "osaka-castle",
-    name: "오사카성",
-    category: "place",
-    classification: "confirmed",
-    placement_status: "ready",
-    processing_status: "completed",
-    action_type: "review_only",
-    can_exclude: true,
-    allow_duplicate: false,
-    is_excluded: false,
-    is_ai_generated: false,
-    estimated_duration_min: 120,
-    coordinates: { lat: 34.6873, lng: 135.5262 },
-    time_constraint: null,
-    question_text: null,
-    options: null,
-    blocked_reason: null,
-    user_context: null,
-    tips: null,
-    tags: ["오사카"],
-    source: "dump",
-    day: null,
-    notes: null,
-    location: "오사카",
-  },
-  {
-    instance_id: "arr-4",
-    place_id: "kuromon-market",
-    name: "쿠로몬 시장",
-    category: "food",
-    classification: "confirmed",
-    placement_status: "ready",
-    processing_status: "completed",
-    action_type: "review_only",
-    can_exclude: true,
-    allow_duplicate: false,
-    is_excluded: false,
-    is_ai_generated: false,
-    estimated_duration_min: 90,
-    coordinates: null,
-    time_constraint: null,
-    question_text: null,
-    options: null,
-    blocked_reason: null,
-    user_context: null,
-    tips: "오후에는 문 닫는 가게가 많아요",
-    tags: ["시장", "오사카"],
-    source: "dump",
-    day: null,
-    notes: null,
-    location: "오사카",
-  },
-  {
-    instance_id: "arr-5",
-    place_id: "abeno-harukas-300",
-    name: "하루카스 300 전망대",
-    category: "place",
-    classification: "confirmed",
-    placement_status: "ready",
-    processing_status: "completed",
-    action_type: "review_only",
-    can_exclude: true,
-    allow_duplicate: false,
-    is_excluded: false,
-    is_ai_generated: false,
-    estimated_duration_min: 90,
-    coordinates: { lat: 34.6454, lng: 135.5136 },
-    time_constraint: null,
-    question_text: null,
-    options: null,
-    blocked_reason: null,
-    user_context: null,
-    tips: "날씨 맑은 날 방문 추천",
-    tags: ["전망대", "오사카"],
-    source: "dump",
-    day: null,
-    notes: null,
-    location: "오사카",
-  },
-  {
-    instance_id: "arr-6",
-    place_id: null,
-    name: "난바 체크인",
-    category: "accommodation",
-    classification: "confirmed",
-    placement_status: "ready",
-    processing_status: "completed",
-    action_type: "review_only",
-    can_exclude: true,
-    allow_duplicate: true,
-    is_excluded: false,
-    is_ai_generated: false,
-    estimated_duration_min: 0,
-    coordinates: null,
-    time_constraint: null,
-    question_text: null,
-    options: null,
-    blocked_reason: null,
-    user_context: "오사카 숙소로 난바 근처를 잡았어요",
-    tips: null,
-    tags: ["숙소", "오사카"],
-    source: "dump",
-    day: null,
-    notes: null,
-    location: "오사카",
-  },
-  {
-    instance_id: "arr-7",
-    place_id: "fushimi-inari",
-    name: "후시미 이나리 신사",
-    category: "place",
-    classification: "confirmed",
-    placement_status: "ready",
-    processing_status: "completed",
-    action_type: "review_only",
-    can_exclude: true,
-    allow_duplicate: false,
-    is_excluded: false,
-    is_ai_generated: false,
-    estimated_duration_min: 120,
-    coordinates: null,
-    time_constraint: null,
-    question_text: null,
-    options: null,
-    blocked_reason: null,
-    user_context: null,
-    tips: "이른 아침이 가장 여유로워요",
-    tags: ["교토", "신사"],
-    source: "dump",
-    day: null,
-    notes: null,
-    location: "교토",
-  },
-  {
-    instance_id: "arr-8",
     place_id: "gion-district-kyoto",
     name: "기온 거리 산책",
     category: "activity",
@@ -225,7 +69,7 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     location: "교토",
   },
   {
-    instance_id: "arr-9",
+    instance_id: "arr-3",
     place_id: "nara-deer-park",
     name: "나라 사슴공원",
     category: "activity",
@@ -252,92 +96,72 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     location: "나라",
   },
   {
-    instance_id: "arr-10",
+    instance_id: "arr-4",
     place_id: null,
-    name: "환전 메모",
-    category: "etc",
-    classification: "confirmed",
-    placement_status: "ready",
+    name: "도톤보리 맛집 투어",
+    category: "food",
+    classification: "undecided",
+    placement_status: "ready_partial",
     processing_status: "completed",
-    action_type: "review_only",
+    action_type: "select_required",
+    can_exclude: true,
+    allow_duplicate: false,
+    is_excluded: false,
+    is_ai_generated: false,
+    estimated_duration_min: 120,
+    coordinates: { lat: 34.6687, lng: 135.5013 },
+    time_constraint: null,
+    question_text: "도톤보리에서 방문할 맛집을 선택해주세요",
+    options: [
+      { id: "food-1", label: "이치란 라멘" },
+      { id: "food-2", label: "쿠이다오레" },
+      { id: "food-3", label: "타코야키 도라쿠" },
+    ],
+    blocked_reason: null,
+    user_context: "도톤보리 맛집 여러 곳 둘러볼 예정",
+    tips: "저녁 시간대는 웨이팅이 길 수 있어요",
+    tags: ["맛집", "도톤보리", "오사카"],
+    source: "dump",
+    day: null,
+    notes: null,
+    location: "도톤보리",
+  },
+  {
+    instance_id: "arr-5",
+    place_id: "glico-sign-osaka",
+    name: "글리코상",
+    category: "place",
+    classification: "open_question",
+    placement_status: "ready_partial",
+    processing_status: "completed",
+    action_type: "select_required",
     can_exclude: true,
     allow_duplicate: false,
     is_excluded: false,
     is_ai_generated: false,
     estimated_duration_min: 20,
-    coordinates: null,
-    time_constraint: "출국 전",
-    question_text: null,
-    options: null,
-    blocked_reason: null,
-    user_context: "현금 결제를 대비해 10만 원 정도 환전하려고 하셨어요",
-    tips: null,
-    tags: ["메모"],
-    source: "dump",
-    day: null,
-    notes: null,
-    location: undefined,
-  },
-  {
-    instance_id: "arr-11",
-    place_id: null,
-    name: "교토역 → 오사카 이동",
-    category: "transport",
-    classification: "open_question",
-    placement_status: "needs_input",
-    processing_status: "completed",
-    action_type: "input_required",
-    can_exclude: true,
-    allow_duplicate: true,
-    is_excluded: false,
-    is_ai_generated: false,
-    estimated_duration_min: 55,
-    coordinates: null,
+    coordinates: { lat: 34.6686, lng: 135.5019 },
     time_constraint: null,
-    question_text: "이동 수단을 알려주세요",
-    options: null,
+    question_text: "궁금한 내용: 글리코상에 가서 사진을 찍으실지 고민중이세요.",
+    options: [
+      { id: "glico-no", label: "안 간다" },
+      { id: "glico-yes", label: "간다" },
+    ],
     blocked_reason: null,
-    user_context: "짐이 많아 환승이 적은 경로를 선호해요",
-    tips: null,
-    tags: ["교통"],
+    user_context: "궁금한 내용: 글리코상에 가서 사진을 찍으실지 고민중이세요.",
+    tips: "도톤보리 동선과 함께 넣으면 짧게 들르기 좋아요",
+    tags: ["오사카", "도톤보리", "포토스팟"],
     source: "dump",
     day: null,
     notes: null,
-    location: "교토",
+    location: "도톤보리",
   },
   {
-    instance_id: "arr-12",
-    place_id: null,
-    name: "신사이바시 쇼핑",
-    category: "activity",
-    classification: "open_question",
-    placement_status: "ready_partial",
-    processing_status: "completed",
-    action_type: "input_required",
-    can_exclude: true,
-    allow_duplicate: false,
-    is_excluded: false,
-    is_ai_generated: true,
-    estimated_duration_min: 120,
-    coordinates: null,
-    time_constraint: null,
-    question_text: "쇼핑 예산과 관심 품목을 알려주세요",
-    options: null,
-    blocked_reason: null,
-    user_context: null,
-    tips: null,
-    tags: ["오사카"],
-    source: "dump",
-    day: null,
-    notes: null,
-    location: "오사카",
-  },
-  {
-    instance_id: "arr-13",
+    instance_id: "arr-6",
     place_id: null,
     name: "아라시야마 대나무숲",
     category: "place",
-    classification: "undecided",
+    classification: "open_question",
     placement_status: "ready_partial",
     processing_status: "completed",
     action_type: "select_required",
@@ -364,111 +188,164 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     location: "교토",
   },
   {
-    instance_id: "arr-14",
+    instance_id: "arr-7",
     place_id: null,
-    name: "교토 숙소 박수 확인",
-    category: "accommodation",
-    classification: "open_question",
-    placement_status: "ready_partial",
-    processing_status: "completed",
-    action_type: "select_required",
-    can_exclude: true,
-    allow_duplicate: true,
-    is_excluded: false,
-    is_ai_generated: false,
-    estimated_duration_min: null,
-    coordinates: null,
-    time_constraint: null,
-    question_text: "몇 박을 숙박하시겠어요?",
-    options: [
-      { id: "one", label: "1박" },
-      { id: "two", label: "2박" },
-    ],
-    blocked_reason: null,
-    user_context: null,
-    tips: null,
-    tags: ["숙소"],
-    source: "dump",
-    day: null,
-    notes: null,
-    location: "교토",
-  },
-  {
-    instance_id: "arr-15",
-    place_id: null,
-    name: "오사카성 보정 요청",
+    name: "와사카 성",
     category: "place",
-    classification: "undecided",
+    classification: "open_question",
     placement_status: "blocked",
     processing_status: "failed",
     action_type: "fix_required",
     can_exclude: true,
     allow_duplicate: false,
     is_excluded: false,
-    is_ai_generated: false,
+    is_ai_generated: true,
     estimated_duration_min: null,
     coordinates: null,
     time_constraint: null,
-    question_text: "방문 목적이나 희망 시간을 다시 입력해주세요",
+    question_text: "오타인 것 같아요. 실제 장소명을 확인해주세요.",
     options: null,
-    blocked_reason: "방문 시간 정보가 누락되었어요",
-    user_context: null,
-    tips: null,
-    tags: ["오사카"],
+    blocked_reason: "오타인 것 같아요",
+    user_context: "AI가 장소명을 잘못 해석했을 가능성이 있어요",
+    tips: "정확한 장소명으로 수정하면 이후 배치가 쉬워져요",
+    tags: ["오사카", "AI 후보"],
     source: "dump",
     day: null,
     notes: null,
     location: "오사카",
   },
   {
-    instance_id: "arr-16",
+    instance_id: "arr-8",
     place_id: null,
-    name: "금각사 (킨카쿠지)",
-    category: "place",
-    classification: "confirmed",
-    placement_status: "ready",
-    processing_status: "processing",
-    action_type: "review_only",
-    can_exclude: true,
-    allow_duplicate: false,
+    name: "교토 게스트하우스",
+    category: "accommodation",
+    classification: "open_question",
+    placement_status: "ready_partial",
+    processing_status: "completed",
+    action_type: "input_required",
+    can_exclude: false,
+    allow_duplicate: true,
     is_excluded: false,
     is_ai_generated: false,
-    estimated_duration_min: 90,
+    estimated_duration_min: 0,
     coordinates: null,
     time_constraint: null,
-    question_text: null,
+    question_text: "아직 게스트하우스를 예약 안하셨어요.",
     options: null,
     blocked_reason: null,
-    user_context: null,
-    tips: null,
-    tags: ["교토"],
+    user_context: "교토 숙소로 게스트하우스 예정",
+    tips: "예약한 숙소 주소를 입력하면 이후 배치가 쉬워져요",
+    tags: ["숙소", "교토"],
     source: "dump",
     day: null,
     notes: null,
     location: "교토",
   },
   {
-    instance_id: "arr-17",
+    instance_id: "arr-9",
     place_id: null,
-    name: "간사이 공항 출발 동선",
-    category: "transport",
+    name: "오사카 난바 호텔",
+    category: "accommodation",
     classification: "confirmed",
     placement_status: "ready",
-    processing_status: "pending",
+    processing_status: "completed",
     action_type: "review_only",
-    can_exclude: true,
+    can_exclude: false,
     allow_duplicate: true,
     is_excluded: false,
     is_ai_generated: false,
-    estimated_duration_min: 70,
-    coordinates: null,
-    time_constraint: null,
+    estimated_duration_min: 20,
+    coordinates: { lat: 34.6662, lng: 135.5011 },
+    time_constraint: "15:00 체크인",
     question_text: null,
     options: null,
     blocked_reason: null,
-    user_context: null,
+    user_context: "오사카 숙소는 이미 예약된 상태예요",
+    tips: "도톤보리와 가까워 첫날 동선이 편해요",
+    tags: ["숙소", "오사카"],
+    source: "dump",
+    day: null,
+    notes: null,
+    location: "오사카",
+    address: "오사카 난바 1-2-3",
+  },
+  {
+    instance_id: "arr-10",
+    place_id: null,
+    name: "오사카 우메다 호텔",
+    category: "accommodation",
+    classification: "confirmed",
+    placement_status: "ready",
+    processing_status: "completed",
+    action_type: "review_only",
+    can_exclude: false,
+    allow_duplicate: true,
+    is_excluded: false,
+    is_ai_generated: false,
+    estimated_duration_min: 20,
+    coordinates: { lat: 34.7038, lng: 135.4975 },
+    time_constraint: "11:00 체크아웃",
+    question_text: null,
+    options: null,
+    blocked_reason: null,
+    user_context: "오사카 마지막 숙소도 예약 완료 상태예요",
+    tips: "공항 이동 전 짐 정리 시간을 조금 남겨두면 좋아요",
+    tags: ["숙소", "오사카"],
+    source: "dump",
+    day: null,
+    notes: null,
+    location: "오사카",
+    address: "오사카 우메다 4-5-6",
+  },
+  {
+    instance_id: "arr-11",
+    place_id: null,
+    name: "간사이 공항 도착",
+    category: "transport",
+    classification: "confirmed",
+    placement_status: "ready",
+    processing_status: "completed",
+    action_type: "review_only",
+    can_exclude: false,
+    allow_duplicate: true,
+    is_excluded: false,
+    is_ai_generated: false,
+    estimated_duration_min: null,
+    coordinates: { lat: 34.4347, lng: 135.2440 },
+    time_constraint: "도착 11:20",
+    question_text: null,
+    options: null,
+    blocked_reason: null,
+    user_context: "항공편은 이미 예약된 상태예요",
     tips: null,
-    tags: ["공항"],
+    tags: ["공항", "항공편"],
+    source: "dump",
+    day: null,
+    notes: null,
+    location: "간사이 공항",
+  },
+  {
+    instance_id: "arr-12",
+    place_id: null,
+    name: "간사이 공항 출발",
+    category: "transport",
+    classification: "confirmed",
+    placement_status: "ready",
+    processing_status: "completed",
+    action_type: "review_only",
+    can_exclude: false,
+    allow_duplicate: true,
+    is_excluded: false,
+    is_ai_generated: false,
+    estimated_duration_min: null,
+    coordinates: { lat: 34.4347, lng: 135.2440 },
+    time_constraint: "출발 18:40",
+    question_text: null,
+    options: null,
+    blocked_reason: null,
+    user_context: "귀국 항공편도 예약된 상태예요",
+    tips: null,
+    tags: ["공항", "항공편"],
     source: "dump",
     day: null,
     notes: null,
@@ -476,12 +353,41 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
   },
 ];
 
+const getInitialDayCard = (instanceId: string, day: number) => {
+  const card = INITIAL_STOCK_CARDS.find((item) => item.instance_id === instanceId);
+  if (!card) {
+    throw new Error(`Missing initial day card for ${instanceId}`);
+  }
+
+  return { ...card, day };
+};
+
 const INITIAL_DAYS = [
-  { id: "day1", label: "Day 1", date: "5월 10일 (토)", cards: [] as TripCardData[] },
-  { id: "day2", label: "Day 2", date: "5월 11일 (일)", cards: [] as TripCardData[] },
+  {
+    id: "day1",
+    label: "Day 1",
+    date: "5월 10일 (토)",
+    cards: [] as TripCardData[],
+  },
+  {
+    id: "day2",
+    label: "Day 2",
+    date: "5월 11일 (일)",
+    cards: [] as TripCardData[],
+  },
   { id: "day3", label: "Day 3", date: "5월 12일 (월)", cards: [] as TripCardData[] },
-  { id: "day4", label: "Day 4", date: "5월 13일 (화)", cards: [] as TripCardData[] },
-  { id: "day5", label: "Day 5", date: "5월 14일 (수)", cards: [] as TripCardData[] },
+  {
+    id: "day4",
+    label: "Day 4",
+    date: "5월 13일 (화)",
+    cards: [] as TripCardData[],
+  },
+  {
+    id: "day5",
+    label: "Day 5",
+    date: "5월 14일 (수)",
+    cards: [] as TripCardData[],
+  },
 ];
 
 interface DayColumn {
@@ -494,6 +400,92 @@ interface DayColumn {
 interface PendingPlacementDecision {
   card: TripCardData;
   targetDayId: string;
+}
+
+interface EditingDurationState {
+  dayId: string;
+  index: number;
+  value: string;
+}
+
+interface EditingTimeState {
+  dayId: string;
+  index: number;
+  value: string;
+}
+
+interface FixedDaySlotConfig {
+  startTimeCardId?: string;
+  endTimeCardId?: string;
+  topCardIds?: string[];
+  bottomCardIds?: string[];
+}
+
+function matchesDestination(card: TripCardData, destination: string | null) {
+  if (!destination) return true;
+
+  return (
+    card.location?.includes(destination) ||
+    card.tags?.some((tag) => tag.includes(destination)) ||
+    false
+  );
+}
+
+const DOTONBORI_SPLIT_REASON =
+  "선택한 맛집 후보를 세부 카드로 분리해 정리하고 있어요. processing이 끝나면 바로 배치할 수 있습니다.";
+const ACCOMMODATION_PROCESSING_REASON =
+  "입력한 숙소 정보를 바탕으로 예약 내용을 정리하고 있어요. 잠시 후 확정 카드로 바뀝니다.";
+const FIXED_DAY_SLOTS: Record<string, FixedDaySlotConfig> = {
+  day1: {
+    startTimeCardId: "arr-11",
+    bottomCardIds: ["arr-9"],
+  },
+  day2: {
+    topCardIds: ["arr-9"],
+  },
+  day4: {
+    bottomCardIds: ["arr-10"],
+  },
+  day5: {
+    topCardIds: ["arr-10"],
+    endTimeCardId: "arr-12",
+  },
+};
+
+function buildDotonboriDetailCards(parentCard: TripCardData) {
+  const selectedOptions =
+    parentCard.options?.filter((option) => parentCard.notes?.includes(option.label)) ?? [];
+
+  return selectedOptions.map((option, index) => ({
+    instance_id: `${parentCard.instance_id}-detail-${index + 1}`,
+    place_id: null,
+    name: option.label,
+    category: "food" as const,
+    classification: "confirmed" as const,
+    placement_status: "ready" as const,
+    processing_status: "processing" as const,
+    action_type: "review_only" as const,
+    can_exclude: true,
+    allow_duplicate: false,
+    is_excluded: false,
+    is_ai_generated: false,
+    estimated_duration_min: 60,
+    coordinates: parentCard.coordinates,
+    time_constraint: null,
+    question_text: null,
+    options: null,
+    blocked_reason: null,
+    user_context: `${parentCard.name}에서 선택한 세부 후보예요.`,
+    tips: null,
+    tags: [...(parentCard.tags ?? []), "세부 카드"],
+    source: parentCard.source,
+    day: null,
+    notes: parentCard.notes,
+    memo: parentCard.memo ?? null,
+    group_label: "도톤보리 맛집 투어",
+    group_reason: DOTONBORI_SPLIT_REASON,
+    location: parentCard.location,
+  }));
 }
 
 function chunkCards(cards: TripCardData[], size: number) {
@@ -517,6 +509,58 @@ function isAccommodationCard(card: TripCardData) {
   return card.category === "accommodation";
 }
 
+function getTimeMode(card: TripCardData): "arrival" | "departure" | null {
+  if (
+    card.name.includes("출발") ||
+    card.name.includes("체크아웃") ||
+    card.time_constraint?.includes("출발") ||
+    card.time_constraint?.includes("체크아웃")
+  ) {
+    return "departure";
+  }
+
+  if (
+    card.name.includes("도착") ||
+    card.name.includes("체크인") ||
+    card.time_constraint?.includes("도착") ||
+    card.time_constraint?.includes("체크인")
+  ) {
+    return "arrival";
+  }
+
+  return null;
+}
+
+function getEditableTimeInfo(card: TripCardData) {
+  if (!isAirportCard(card) && !isAccommodationCard(card)) return null;
+
+  const mode = getTimeMode(card);
+  if (!mode) return null;
+
+  const matchedTime = card.time_constraint?.match(/(\d{1,2}:\d{2})/)?.[1] ?? "";
+
+  return {
+    mode,
+    label: mode === "arrival" ? "도착 예정 시간" : "출발 예정 시간",
+    value: matchedTime,
+  };
+}
+
+function buildSilentMemoContextUpdate(card: TripCardData) {
+  const memo = card.memo?.trim();
+  if (!memo) return null;
+
+  return {
+    user_context: `메모 반영: ${memo}`,
+    tips:
+      card.category === "food"
+        ? "메모를 반영해 식사 동선과 체류 순서를 다시 정리했어요."
+        : card.category === "place" || card.category === "activity"
+          ? "메모를 반영해 방문 순서와 체류 포인트를 조용히 보정했어요."
+          : "메모를 반영해 추천 흐름을 다시 정리했어요.",
+  };
+}
+
 export default function ArrangePage() {
   const [stockCards, setStockCards] = useState<TripCardData[]>(INITIAL_STOCK_CARDS);
   const [days, setDays] = useState<DayColumn[]>(INITIAL_DAYS);
@@ -525,14 +569,90 @@ export default function ArrangePage() {
   const [draggedCard, setDraggedCard] = useState<TripCardData | null>(null);
   const [dragSource, setDragSource] = useState<string | null>(null);
   const [draggedCardIndex, setDraggedCardIndex] = useState<number | null>(null);
+  const [editingDuration, setEditingDuration] = useState<EditingDurationState | null>(null);
+  const [editingTime, setEditingTime] = useState<EditingTimeState | null>(null);
   const [pendingPlacementDecision, setPendingPlacementDecision] =
     useState<PendingPlacementDecision | null>(null);
+  const [destinationFilter, setDestinationFilter] = useState<string | null>(null);
+  const [addCardOpen, setAddCardOpen] = useState(false);
 
   const currentStep = 4;
 
-  const placedCardIds = new Set(
-    days.flatMap((day) => day.cards.map((card) => card.instance_id))
+  const fixedCardsByDay = useMemo(() => {
+    const cardMap = new Map(stockCards.map((card) => [card.instance_id, card]));
+
+    return days.reduce<
+      Record<
+        string,
+        {
+          startTimeCard?: TripCardData;
+          endTimeCard?: TripCardData;
+          topCards: TripCardData[];
+          bottomCards: TripCardData[];
+        }
+      >
+    >((accumulator, day) => {
+      const config = FIXED_DAY_SLOTS[day.id] ?? {};
+
+      accumulator[day.id] = {
+        startTimeCard: config.startTimeCardId ? cardMap.get(config.startTimeCardId) : undefined,
+        endTimeCard: config.endTimeCardId ? cardMap.get(config.endTimeCardId) : undefined,
+        topCards: (config.topCardIds ?? [])
+          .map((id) => cardMap.get(id))
+          .filter((card): card is TripCardData => Boolean(card)),
+        bottomCards: (config.bottomCardIds ?? [])
+          .map((id) => cardMap.get(id))
+          .filter((card): card is TripCardData => Boolean(card)),
+      };
+
+      return accumulator;
+    }, {});
+  }, [days, stockCards]);
+
+  const visibleFixedCardsByDay = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(fixedCardsByDay).map(([dayId, entry]) => [
+          dayId,
+          {
+            startTimeCard:
+              entry.startTimeCard && matchesDestination(entry.startTimeCard, destinationFilter)
+                ? entry.startTimeCard
+                : undefined,
+            endTimeCard:
+              entry.endTimeCard && matchesDestination(entry.endTimeCard, destinationFilter)
+                ? entry.endTimeCard
+                : undefined,
+            topCards: entry.topCards.filter((card) => matchesDestination(card, destinationFilter)),
+            bottomCards: entry.bottomCards.filter((card) =>
+              matchesDestination(card, destinationFilter)
+            ),
+          },
+        ])
+      ) as Record<string, {
+        startTimeCard?: TripCardData;
+        endTimeCard?: TripCardData;
+        topCards: TripCardData[];
+        bottomCards: TripCardData[];
+      }>,
+    [destinationFilter, fixedCardsByDay]
   );
+
+  const fixedPlacementIds = new Set(
+    Object.values(fixedCardsByDay).flatMap((entry) => [
+      ...(entry.startTimeCard ? [entry.startTimeCard.instance_id] : []),
+      ...(entry.endTimeCard ? [entry.endTimeCard.instance_id] : []),
+      ...entry.topCards.map((card) => card.instance_id),
+      ...entry.bottomCards.map((card) => card.instance_id),
+    ])
+  );
+
+  const placedCardIds = new Set(
+    [...fixedPlacementIds, ...days.flatMap((day) => day.cards.map((card) => card.instance_id))]
+  );
+  const visibleStockCount = stockCards.filter(
+    (card) => !isAirportCard(card) && matchesDestination(card, destinationFilter)
+  ).length;
   const placedCardsCount = placedCardIds.size;
   const totalCards = stockCards.length;
   const progress = totalCards > 0 ? Math.round((placedCardsCount / totalCards) * 100) : 0;
@@ -544,6 +664,37 @@ export default function ArrangePage() {
 
   const updateProcessingCards = (cards: TripCardData[]) =>
     cards.map((card) => {
+      if (
+        card.source === "manual" &&
+        card.processing_status === "processing" &&
+        card.processing_started_at &&
+        Date.now() - card.processing_started_at >= 2500
+      ) {
+        return finalizeProcessingTripCard(card);
+      }
+
+      if (card.category === "accommodation" && card.processing_status === "processing") {
+        if (
+          card.processing_started_at &&
+          Date.now() - card.processing_started_at >= 3000
+        ) {
+          return {
+            ...card,
+            classification: "confirmed" as const,
+            placement_status: "ready" as const,
+            processing_status: "completed" as const,
+            action_type: "review_only" as const,
+            address: card.notes ?? card.address,
+            notes: null,
+            group_label: undefined,
+            group_reason: undefined,
+            processing_started_at: null,
+          };
+        }
+
+        return card;
+      }
+
       if (card.processing_status === "processing" && Math.random() > 0.5) {
         return { ...card, processing_status: "completed" as const };
       }
@@ -556,11 +707,28 @@ export default function ArrangePage() {
     });
 
   const getPlacements = (cardInstanceId: string) =>
-    days.flatMap((day) =>
-      day.cards.flatMap((card, index) =>
-        card.instance_id === cardInstanceId ? [{ dayId: day.id, index }] : []
-      )
-    );
+    days.flatMap((day) => {
+      const movablePlacements = day.cards.flatMap((card, index) =>
+        card.instance_id === cardInstanceId ? [{ dayId: day.id, index, fixed: false }] : []
+      );
+      const fixedEntry = fixedCardsByDay[day.id];
+      const fixedPlacements =
+        fixedEntry &&
+        [
+          fixedEntry.startTimeCard,
+          fixedEntry.endTimeCard,
+          ...fixedEntry.topCards,
+          ...fixedEntry.bottomCards,
+        ]
+          .filter((card): card is TripCardData => Boolean(card))
+          .flatMap((card) =>
+            card.instance_id === cardInstanceId
+              ? [{ dayId: day.id, index: -1, fixed: true }]
+              : []
+          );
+
+      return [...movablePlacements, ...(fixedPlacements ?? [])];
+    });
 
   const isCardPlaced = (cardInstanceId: string) => getPlacements(cardInstanceId).length > 0;
 
@@ -576,6 +744,27 @@ export default function ArrangePage() {
           }
         : day
     );
+
+  const insertCardOnDay = (
+    dayList: DayColumn[],
+    dayId: string,
+    card: TripCardData,
+    targetIndex: number
+  ) =>
+    dayList.map((day) => {
+      if (day.id !== dayId) return day;
+
+      const nextCards = [...day.cards];
+      nextCards.splice(targetIndex, 0, {
+        ...card,
+        day: Number.parseInt(dayId.replace("day", ""), 10),
+      });
+
+      return {
+        ...day,
+        cards: nextCards,
+      };
+    });
 
   const removeCardPlacement = (
     dayList: DayColumn[],
@@ -617,7 +806,29 @@ export default function ArrangePage() {
   };
 
   const stockSections = useMemo(() => {
-    const promotedCards = stockCards.filter(
+    const filteredStockCards = stockCards.filter((card) =>
+      matchesDestination(card, destinationFilter)
+    );
+    const visibleStockCards = filteredStockCards.filter((card) => !isAirportCard(card));
+
+    const groupedCardsByLabel = visibleStockCards
+      .filter((card) => card.group_label)
+      .reduce<Record<string, TripCardData[]>>((accumulator, card) => {
+        const key = card.group_label!;
+        accumulator[key] = [...(accumulator[key] ?? []), card];
+        return accumulator;
+      }, {});
+
+    const specialGroups = Object.entries(groupedCardsByLabel).map(([label, cards]) => ({
+      id: `special-${label}`,
+      title: label,
+      reason: cards[0]?.group_reason ?? "묶음 카드예요.",
+      cards,
+    }));
+
+    const regularStockCards = visibleStockCards.filter((card) => !card.group_label);
+
+    const promotedCards = regularStockCards.filter(
       (card) =>
         (card.placement_status === "ready" ||
           card.placement_status === "ready_partial") &&
@@ -680,7 +891,7 @@ export default function ArrangePage() {
       ...regionGroups,
     ];
 
-    const unpromotedCards = stockCards.filter(
+    const unpromotedCards = regularStockCards.filter(
       (card) =>
         !(
           (card.placement_status === "ready" ||
@@ -690,6 +901,7 @@ export default function ArrangePage() {
     );
 
     return {
+      special: specialGroups,
       promoted: promotedGroups,
       unpromoted: {
         title: "미승격 카드",
@@ -697,7 +909,7 @@ export default function ArrangePage() {
         cards: unpromotedCards,
       },
     };
-  }, [stockCards]);
+  }, [destinationFilter, stockCards]);
 
   const handleDragStart = (card: TripCardData, source: string) => {
     if (!canDrag(card)) return;
@@ -719,14 +931,18 @@ export default function ArrangePage() {
     setDraggedCardIndex(null);
   };
 
-  const handleDropOnDay = (dayId: string) => {
+  const handleDropOnDay = (dayId: string, targetIndex?: number) => {
     if (!draggedCard || !dragSource) return;
 
     if (dragSource === "stock") {
       const existingPlacements = getPlacements(draggedCard.instance_id);
 
       if (existingPlacements.length === 0 || draggedCard.allow_duplicate) {
-        setDays((prev) => placeCardOnDay(prev, dayId, draggedCard));
+        setDays((prev) =>
+          targetIndex == null
+            ? placeCardOnDay(prev, dayId, draggedCard)
+            : insertCardOnDay(prev, dayId, draggedCard, targetIndex)
+        );
         handleDragEnd();
         return;
       }
@@ -736,7 +952,7 @@ export default function ArrangePage() {
       return;
     }
 
-    if (dragSource === dayId) {
+    if (dragSource === dayId && draggedCardIndex == null) {
       handleDragEnd();
       return;
     }
@@ -746,9 +962,37 @@ export default function ArrangePage() {
       return;
     }
 
+    if (dragSource === dayId) {
+      if (targetIndex == null || targetIndex === draggedCardIndex) {
+        handleDragEnd();
+        return;
+      }
+
+      setDays((prev) =>
+        prev.map((day) => {
+          if (day.id !== dayId) return day;
+
+          const nextCards = [...day.cards];
+          const [movedCard] = nextCards.splice(draggedCardIndex, 1);
+          const adjustedIndex =
+            draggedCardIndex < targetIndex ? targetIndex - 1 : targetIndex;
+          nextCards.splice(adjustedIndex, 0, movedCard);
+
+          return {
+            ...day,
+            cards: nextCards,
+          };
+        })
+      );
+      handleDragEnd();
+      return;
+    }
+
     setDays((prev) => {
       const withoutDraggedPlacement = removeCardPlacement(prev, dragSource, draggedCardIndex);
-      return placeCardOnDay(withoutDraggedPlacement, dayId, draggedCard);
+      return targetIndex == null
+        ? placeCardOnDay(withoutDraggedPlacement, dayId, draggedCard)
+        : insertCardOnDay(withoutDraggedPlacement, dayId, draggedCard, targetIndex);
     });
 
     handleDragEnd();
@@ -794,7 +1038,83 @@ export default function ArrangePage() {
   };
 
   const handleUpdateCard = (updatedCard: TripCardData) => {
+    const existingCard =
+      stockCards.find((card) => card.instance_id === updatedCard.instance_id) ??
+      days
+        .flatMap((day) => day.cards)
+        .find((card) => card.instance_id === updatedCard.instance_id) ??
+      null;
+
+    if (updatedCard.instance_id === "arr-4" && updatedCard.notes?.trim()) {
+      const splitCards = buildDotonboriDetailCards(updatedCard);
+
+      if (splitCards.length > 0) {
+        setStockCards((prev) => [
+          ...prev.filter((card) => card.instance_id !== updatedCard.instance_id),
+          ...splitCards,
+        ]);
+        setDays((prev) =>
+          prev.map((day) => ({
+            ...day,
+            cards: day.cards.filter((card) => card.instance_id !== updatedCard.instance_id),
+          }))
+        );
+        setSelectedCard(null);
+        return;
+      }
+    }
+
+    if (updatedCard.category === "accommodation" && (updatedCard.notes?.trim() || updatedCard.memo?.trim())) {
+      syncCardAcrossBoard({
+        ...updatedCard,
+        classification: "confirmed",
+        placement_status: "ready",
+        processing_status: "processing",
+        action_type: "review_only",
+        group_label: "숙소",
+        group_reason: ACCOMMODATION_PROCESSING_REASON,
+        processing_started_at: Date.now(),
+      });
+      return;
+    }
+
+    const memoChanged = (updatedCard.memo ?? null) !== (existingCard?.memo ?? null);
+
     syncCardAcrossBoard(updatedCard);
+
+    if (
+      updatedCard.category !== "accommodation" &&
+      memoChanged &&
+      updatedCard.memo?.trim()
+    ) {
+      window.setTimeout(() => {
+        const silentUpdate = buildSilentMemoContextUpdate(updatedCard);
+        if (!silentUpdate) return;
+
+        setStockCards((prev) =>
+          prev.map((card) =>
+            card.instance_id === updatedCard.instance_id
+              ? { ...card, ...silentUpdate }
+              : card
+          )
+        );
+        setDays((prev) =>
+          prev.map((day) => ({
+            ...day,
+            cards: day.cards.map((card) =>
+              card.instance_id === updatedCard.instance_id
+                ? { ...card, ...silentUpdate }
+                : card
+            ),
+          }))
+        );
+        setSelectedCard((prev) =>
+          prev?.instance_id === updatedCard.instance_id
+            ? { ...prev, ...silentUpdate }
+            : prev
+        );
+      }, 1800);
+    }
   };
 
   const handleRefreshStock = () => {
@@ -805,6 +1125,69 @@ export default function ArrangePage() {
         cards: updateProcessingCards(day.cards),
       }))
     );
+  };
+
+  const handleAddCard = (input: NewTripCardInput) => {
+    setStockCards((prev) => [...prev, createProcessingTripCard("arr-add", input)]);
+  };
+
+  const updateDayCardDuration = (dayId: string, index: number, durationValue: string) => {
+    const parsed = Number.parseInt(durationValue, 10);
+    if (Number.isNaN(parsed) || parsed < 0) {
+      setEditingDuration(null);
+      return;
+    }
+
+    setDays((prev) =>
+      prev.map((day) => {
+        if (day.id !== dayId) return day;
+        return {
+          ...day,
+          cards: day.cards.map((card, cardIndex) =>
+            cardIndex === index ? { ...card, estimated_duration_min: parsed } : card
+          ),
+        };
+      })
+    );
+    setEditingDuration(null);
+  };
+
+  const updateDayCardTimeConstraint = (dayId: string, index: number, timeValue: string) => {
+    const trimmed = timeValue.trim();
+    const valid = /^\d{1,2}:\d{2}$/.test(trimmed);
+
+    if (!valid) {
+      setEditingTime(null);
+      return;
+    }
+
+    setDays((prev) =>
+      prev.map((day) => {
+        if (day.id !== dayId) return day;
+
+        return {
+          ...day,
+          cards: day.cards.map((card, cardIndex) => {
+            if (cardIndex !== index) return card;
+
+            const mode = getTimeMode(card);
+            if (isAccommodationCard(card)) {
+              return {
+                ...card,
+                time_constraint:
+                  mode === "departure" ? `${trimmed} 체크아웃` : `${trimmed} 체크인`,
+              };
+            }
+
+            return {
+              ...card,
+              time_constraint: mode === "departure" ? `출발 ${trimmed}` : `도착 ${trimmed}`,
+            };
+          }),
+        };
+      })
+    );
+    setEditingTime(null);
   };
 
   useEffect(() => {
@@ -923,6 +1306,63 @@ export default function ArrangePage() {
     );
   };
 
+  const renderFixedTimeBlock = (
+    card: TripCardData,
+    tone: "start" | "end"
+  ) => {
+    const timeValue = card.time_constraint?.match(/(\d{1,2}:\d{2})/)?.[1] ?? "";
+
+    return (
+      <div
+        key={`${card.instance_id}-${tone}`}
+        className={`rounded-2xl border px-3 py-3 ${
+          tone === "start"
+            ? "border-[#D9D3FF] bg-[#F7F5FF]"
+            : "border-[#D7E8F8] bg-[#F5FAFF]"
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[11px] font-semibold tracking-[0.08em] text-[#888]">
+              {tone === "start" ? "고정 시작 시간" : "고정 마무리 시간"}
+            </p>
+            <p className="mt-1 text-sm font-semibold text-[#1A1A1A]">
+              {tone === "start" ? "간사이 공항 도착" : "간사이 공항 출발"}
+            </p>
+          </div>
+          <span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-semibold text-[#534AB7]">
+            {timeValue}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderFixedStayBlock = (
+    dayId: string,
+    card: TripCardData,
+    anchor: "top" | "bottom"
+  ) => (
+    <div key={`${dayId}-${card.instance_id}-${anchor}`} className="rounded-2xl border border-[#E5E0F8] bg-white p-2 shadow-sm">
+      <div className="mb-2 flex items-center justify-between px-1">
+        <div>
+          <p className="text-[11px] font-semibold tracking-[0.08em] text-[#8A84B5]">
+            {anchor === "top" ? "고정 숙소 시작점" : "고정 숙소 마무리"}
+          </p>
+          <p className="mt-0.5 text-[11px] text-[#888]">
+            {anchor === "top"
+              ? "이 날은 숙소에서 시작하는 흐름으로 가정했어요."
+              : "이 날은 숙소에서 마무리되는 흐름으로 가정했어요."}
+          </p>
+        </div>
+        <span className="rounded-full bg-[#F6F5FF] px-2 py-1 text-[10px] font-semibold text-[#534AB7]">
+          고정
+        </span>
+      </div>
+      <TripCard card={card} onClick={() => handleCardClick(card)} compact />
+    </div>
+  );
+
   return (
     <div className="flex min-h-screen flex-col bg-[#F5F5F3] font-sans">
       <MainHeader />
@@ -934,6 +1374,18 @@ export default function ArrangePage() {
           startDate: "5월 10일",
           endDate: "5월 14일",
         }}
+        destinationFilter={{
+          activeDestination: destinationFilter,
+          onSelectDestination: setDestinationFilter,
+        }}
+        rightButtons={
+          <button
+            onClick={() => setAddCardOpen(true)}
+            className="rounded-lg bg-[#534AB7] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#4840A0]"
+          >
+            카드 추가하기
+          </button>
+        }
       />
 
       <div className="border-b border-[#EBEBEB] bg-white px-8 py-4 lg:px-12">
@@ -966,88 +1418,87 @@ export default function ArrangePage() {
           <div className="border-b border-[#EBEBEB] p-4">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-[#1A1A1A]">카드 목록</h2>
-              <span className="text-sm text-[#888]">{stockCards.length}개</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleRefreshStock}
+                  className="flex items-center gap-1 rounded-full border border-[#D8D8E8] bg-white px-2.5 py-1 text-xs font-medium text-[#534AB7] transition-colors hover:bg-[#F6F5FF]"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+                    <path d="M21 3v6h-6" />
+                  </svg>
+                  재정렬
+                </button>
+                <span className="text-sm text-[#888]">
+                  {destinationFilter
+                    ? `${visibleStockCount}개`
+                    : `${stockCards.filter((card) => !isAirportCard(card)).length}개`}
+                </span>
+              </div>
             </div>
-            <p className="mt-1 text-xs text-[#999]">승격된 카드와 미승격 카드로 단순화해 보여줍니다</p>
+            {destinationFilter && (
+              <p className="mt-2 text-xs font-medium text-[#534AB7]">
+                현재 {destinationFilter} 관련 카드만 보고 있어요
+              </p>
+            )}
           </div>
 
           <div className="flex-1 space-y-6 overflow-y-auto p-4">
-            <section className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-[#1A1A1A]">승격된 카드</h3>
-                  <p className="text-xs text-[#888]">ready 또는 ready_partial 이고 처리가 완료되어 바로 배치할 수 있는 카드</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleRefreshStock}
-                    className="flex items-center gap-1 rounded-full border border-[#D8D8E8] bg-white px-2.5 py-1 text-xs font-medium text-[#534AB7] transition-colors hover:bg-[#F6F5FF]"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-                      <path d="M21 3v6h-6" />
-                    </svg>
-                    새로고침
-                  </button>
-                  <span className="rounded-full bg-[#EEF2FF] px-2.5 py-1 text-xs font-medium text-[#534AB7]">
-                    {stockSections.promoted.reduce((sum, group) => sum + group.cards.length, 0)}개
-                  </span>
-                </div>
-              </div>
-
-              {stockSections.promoted.length > 0 ? (
-                stockSections.promoted.map((group) => (
-                  <div key={group.id} className="rounded-2xl border border-[#E8E8E8] bg-[#FAFAFA] p-3">
-                    <div className="mb-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-semibold text-[#1A1A1A]">{group.title}</h4>
-                        <span className="text-xs text-[#888]">{group.cards.length}개</span>
-                      </div>
-                      <p className="mt-1 text-xs text-[#888]">{group.reason}</p>
-                    </div>
-                    <div className="space-y-3">
-                      {group.cards.map((card) => renderStockCard(card, "stock"))}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-2xl border border-dashed border-[#D8D8D8] bg-[#FAFAFA] p-4 text-xs text-[#888]">
-                  현재 available 조건을 만족하는 카드가 없어요.
-                </div>
-              )}
-            </section>
-
-            <section className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-[#1A1A1A]">미승격 카드</h3>
-                  <p className="text-xs text-[#888]">아직 배치 가능 상태로 올라오지 않은 카드</p>
-                </div>
-                <span className="rounded-full bg-[#F3F4F6] px-2.5 py-1 text-xs font-medium text-[#6B7280]">
-                  {stockSections.unpromoted.cards.length}개
-                </span>
-              </div>
-
-              <div className="rounded-2xl border border-[#E8E8E8] bg-[#FCFCFC] p-3">
+            {stockSections.special.map((group) => (
+              <div key={group.id} className="rounded-2xl border border-[#E8E8E8] bg-[#FAFAFA] p-3">
                 <div className="mb-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-[#1A1A1A]">{stockSections.unpromoted.title}</h4>
-                    <span className="text-xs text-[#888]">{stockSections.unpromoted.cards.length}개</span>
+                    <h4 className="text-sm font-semibold text-[#1A1A1A]">{group.title}</h4>
+                    <span className="text-xs text-[#888]">{group.cards.length}개</span>
                   </div>
-                  <p className="mt-1 text-xs text-[#888]">{stockSections.unpromoted.reason}</p>
+                  <p className="mt-1 text-xs text-[#888]">{group.reason}</p>
                 </div>
-
-                {stockSections.unpromoted.cards.length > 0 ? (
-                  <div className="space-y-3">
-                    {stockSections.unpromoted.cards.map((card) => renderStockCard(card, "stock"))}
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-dashed border-[#E5E5E5] bg-white px-3 py-4 text-xs text-[#AAA]">
-                    현재 미승격 카드는 없어요.
-                  </div>
-                )}
+                <div className="space-y-3">
+                  {group.cards.map((card) => renderStockCard(card, "stock"))}
+                </div>
               </div>
-            </section>
+            ))}
+
+            {stockSections.promoted.length > 0 ? (
+              stockSections.promoted.map((group) => (
+                <div key={group.id} className="rounded-2xl border border-[#E8E8E8] bg-[#FAFAFA] p-3">
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-semibold text-[#1A1A1A]">{group.title}</h4>
+                      <span className="text-xs text-[#888]">{group.cards.length}개</span>
+                    </div>
+                    <p className="mt-1 text-xs text-[#888]">{group.reason}</p>
+                  </div>
+                  <div className="space-y-3">
+                    {group.cards.map((card) => renderStockCard(card, "stock"))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-2xl border border-dashed border-[#D8D8D8] bg-[#FAFAFA] p-4 text-xs text-[#888]">
+                현재 available 조건을 만족하는 카드가 없어요.
+              </div>
+            )}
+
+            <div className="rounded-2xl border border-[#E8E8E8] bg-[#FCFCFC] p-3">
+              <div className="mb-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-[#1A1A1A]">{stockSections.unpromoted.title}</h4>
+                  <span className="text-xs text-[#888]">{stockSections.unpromoted.cards.length}개</span>
+                </div>
+                <p className="mt-1 text-xs text-[#888]">{stockSections.unpromoted.reason}</p>
+              </div>
+
+              {stockSections.unpromoted.cards.length > 0 ? (
+                <div className="space-y-3">
+                  {stockSections.unpromoted.cards.map((card) => renderStockCard(card, "stock"))}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-[#E5E5E5] bg-white px-3 py-4 text-xs text-[#AAA]">
+                  현재 미승격 카드는 없어요.
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1064,35 +1515,145 @@ export default function ArrangePage() {
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => handleDropOnDay(day.id)}
               >
+                {(() => {
+                  const fixedEntry = visibleFixedCardsByDay[day.id];
+                  const visibleDayCards = day.cards.filter((card) =>
+                    matchesDestination(card, destinationFilter)
+                  );
+                  const totalCount =
+                    visibleDayCards.length +
+                    (fixedEntry?.startTimeCard ? 1 : 0) +
+                    (fixedEntry?.endTimeCard ? 1 : 0) +
+                    (fixedEntry?.topCards.length ?? 0) +
+                    (fixedEntry?.bottomCards.length ?? 0);
+
+                  return (
+                    <>
                 <div className="rounded-t-xl border-b border-[#E8E8E8] bg-white p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-semibold text-[#1A1A1A]">{day.label}</h3>
                       <p className="text-xs text-[#888]">{day.date}</p>
                     </div>
-                    <span className="text-sm font-medium text-[#534AB7]">{day.cards.length}개</span>
+                    <span className="text-sm font-medium text-[#534AB7]">{totalCount}개</span>
                   </div>
                 </div>
 
                 <div className="min-h-[400px] space-y-3 p-3">
-                  {day.cards.map((card, index) => (
+                  {fixedEntry?.startTimeCard && renderFixedTimeBlock(fixedEntry.startTimeCard, "start")}
+
+                  {fixedEntry?.topCards.map((card) => renderFixedStayBlock(day.id, card, "top"))}
+
+                  {visibleDayCards.map((card) => {
+                    const index = day.cards.findIndex(
+                      (dayCard) => dayCard.instance_id === card.instance_id
+                    );
+
+                    return (
                     <div
                       key={`${card.instance_id}-${index}`}
                       draggable={canDrag(card)}
                       onDragStart={() => handleDayCardDragStart(card, day.id, index)}
                       onDragEnd={handleDragEnd}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDropOnDay(day.id, index);
+                      }}
                       className={`relative ${canDrag(card) ? "cursor-grab active:cursor-grabbing" : ""}`}
                     >
-                      <div className="absolute -left-1 top-1/2 z-10 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-[#534AB7] text-xs font-medium text-white">
-                        {index + 1}
-                      </div>
-                      <div className="ml-4">
-                        <TripCard card={card} onClick={() => handleCardClick(card)} compact />
+                      <TripCard card={card} onClick={() => handleCardClick(card)} compact />
+                      <div className="mt-1 pl-2">
+                        {getEditableTimeInfo(card) ? (
+                          editingTime?.dayId === day.id && editingTime.index === index ? (
+                            <input
+                              autoFocus
+                              value={editingTime.value}
+                              onChange={(e) =>
+                                setEditingTime({
+                                  dayId: day.id,
+                                  index,
+                                  value: e.target.value,
+                                })
+                              }
+                              onBlur={() =>
+                                updateDayCardTimeConstraint(day.id, index, editingTime.value)
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  updateDayCardTimeConstraint(day.id, index, editingTime.value);
+                                }
+                                if (e.key === "Escape") {
+                                  setEditingTime(null);
+                                }
+                              }}
+                              className="w-28 rounded-md border border-[#D8D8D8] bg-white px-2 py-1 text-[11px] text-[#666] focus:border-[#534AB7] focus:outline-none"
+                            />
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingTime({
+                                  dayId: day.id,
+                                  index,
+                                  value: getEditableTimeInfo(card)?.value ?? "",
+                                });
+                              }}
+                              className="text-[11px] text-[#888] transition-colors hover:text-[#534AB7]"
+                            >
+                              {getEditableTimeInfo(card)?.label} {getEditableTimeInfo(card)?.value}
+                            </button>
+                          )
+                        ) : editingDuration?.dayId === day.id && editingDuration.index === index ? (
+                          <input
+                            autoFocus
+                            value={editingDuration.value}
+                            onChange={(e) =>
+                              setEditingDuration({
+                                dayId: day.id,
+                                index,
+                                value: e.target.value,
+                              })
+                            }
+                            onBlur={() =>
+                              updateDayCardDuration(day.id, index, editingDuration.value)
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                updateDayCardDuration(day.id, index, editingDuration.value);
+                              }
+                              if (e.key === "Escape") {
+                                setEditingDuration(null);
+                              }
+                            }}
+                            className="w-24 rounded-md border border-[#D8D8D8] bg-white px-2 py-1 text-[11px] text-[#666] focus:border-[#534AB7] focus:outline-none"
+                          />
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingDuration({
+                                dayId: day.id,
+                                index,
+                                value: String(card.estimated_duration_min ?? 0),
+                              });
+                            }}
+                            className="text-[11px] text-[#888] transition-colors hover:text-[#534AB7]"
+                          >
+                            체류시간 {card.estimated_duration_min ?? 0}분
+                          </button>
+                        )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
 
-                  {day.cards.length === 0 && (
+                  {visibleDayCards.length === 0 &&
+                    !fixedEntry?.startTimeCard &&
+                    !fixedEntry?.endTimeCard &&
+                    (fixedEntry?.topCards.length ?? 0) === 0 &&
+                    (fixedEntry?.bottomCards.length ?? 0) === 0 && (
                     <div className="flex h-32 flex-col items-center justify-center text-[#B0B0B0]">
                       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mb-2">
                         <path d="M12 5v14M5 12h14" />
@@ -1100,7 +1661,14 @@ export default function ArrangePage() {
                       <p className="text-xs">카드를 여기에 드롭하세요</p>
                     </div>
                   )}
+
+                  {fixedEntry?.bottomCards.map((card) => renderFixedStayBlock(day.id, card, "bottom"))}
+
+                  {fixedEntry?.endTimeCard && renderFixedTimeBlock(fixedEntry.endTimeCard, "end")}
                 </div>
+                    </>
+                  );
+                })()}
               </div>
             ))}
           </div>
@@ -1195,6 +1763,12 @@ export default function ArrangePage() {
           </div>
         </div>
       )}
+
+      <AddTripCardDialog
+        open={addCardOpen}
+        onOpenChange={setAddCardOpen}
+        onSubmit={handleAddCard}
+      />
     </div>
   );
 }
