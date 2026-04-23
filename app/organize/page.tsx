@@ -385,23 +385,12 @@ const GROUP_META = {
       </svg>
     ),
   },
-  excluded_general: {
+  excluded: {
     title: "제외된 항목",
     countLabel: "제외됨",
     bg: "#F3F4F6",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-      </svg>
-    ),
-  },
-  excluded_unassigned: {
-    title: "미분류 제외 항목",
-    countLabel: "제외됨",
-    bg: "#F3F4F6",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2">
         <circle cx="12" cy="12" r="10" />
         <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
       </svg>
@@ -422,23 +411,29 @@ export default function OrganizePage() {
     select_required: true,
     fix_required: true,
     review_only: true,
-    excluded_general: true,
-    excluded_unassigned: false,
+    excluded: true,
   });
 
   const groupedCards = useMemo(() => {
     const activeCards = cards.filter((c) => !c.is_excluded);
     const excludedCards = cards.filter((c) => c.is_excluded);
+    const sortedExcludedCards = [...excludedCards].sort((left, right) => {
+      if (left.classification === "unassigned" && right.classification !== "unassigned") {
+        return 1;
+      }
+      if (left.classification !== "unassigned" && right.classification === "unassigned") {
+        return -1;
+      }
+
+      return left.name.localeCompare(right.name, "ko");
+    });
 
     return {
       input_required: activeCards.filter((c) => c.action_type === "input_required"),
       select_required: activeCards.filter((c) => c.action_type === "select_required"),
       fix_required: activeCards.filter((c) => c.action_type === "fix_required"),
       review_only: activeCards.filter((c) => c.action_type === "review_only"),
-      excluded: {
-        general: excludedCards.filter((c) => c.classification !== "unassigned"),
-        unassigned: excludedCards.filter((c) => c.classification === "unassigned"),
-      },
+      excluded: sortedExcludedCards,
     };
   }, [cards]);
 
@@ -490,7 +485,7 @@ export default function OrganizePage() {
     if (cardsInGroup.length === 0) return null;
 
     const meta = GROUP_META[key];
-    const allowExcludedClick = key === "excluded_general" || key === "excluded_unassigned";
+    const allowExcludedClick = key === "excluded";
 
     return (
       <div className="overflow-hidden rounded-2xl border border-[#EBEBEB] bg-white">
@@ -582,8 +577,7 @@ export default function OrganizePage() {
               {renderGroupSection("select_required", groupedCards.select_required)}
               {renderGroupSection("fix_required", groupedCards.fix_required)}
               {renderGroupSection("review_only", groupedCards.review_only)}
-              {renderGroupSection("excluded_general", groupedCards.excluded.general)}
-              {renderGroupSection("excluded_unassigned", groupedCards.excluded.unassigned)}
+              {renderGroupSection("excluded", groupedCards.excluded)}
 
               <div className="mt-6 flex items-center justify-between lg:hidden">
                 <Link
@@ -683,7 +677,7 @@ export default function OrganizePage() {
                             완료 {groupedCards.review_only.length}
                           </span>
                           <span className="rounded bg-[#F3F4F6] px-1.5 py-0.5 text-xs text-[#6B7280]">
-                            제외 {groupedCards.excluded.general.length + groupedCards.excluded.unassigned.length}
+                            제외 {groupedCards.excluded.length}
                           </span>
                         </div>
                       </div>

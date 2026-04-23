@@ -483,29 +483,6 @@ const INITIAL_DAYS = [
   { id: "day5", label: "Day 5", date: "5월 14일 (수)", cards: [] as TripCardData[] },
 ];
 
-const UNAVAILABLE_META = {
-  ready: {
-    title: "ready",
-    description: "위치 정보가 없어 아직 지역 그룹에 올릴 수 없어요",
-  },
-  input_required: {
-    title: "input_required",
-    description: "직접 입력이 필요해 드래그할 수 없어요",
-  },
-  select_required: {
-    title: "select_required",
-    description: "선택이 필요해 드래그할 수 없어요",
-  },
-  fix_required: {
-    title: "fix_required",
-    description: "수정이 필요해 드래그할 수 없어요",
-  },
-  processing: {
-    title: "processing",
-    description: "AI 처리 중이라 완료되면 자동으로 available로 이동해요",
-  },
-} as const;
-
 interface DayColumn {
   id: string;
   label: string;
@@ -523,6 +500,17 @@ function chunkCards(cards: TripCardData[], size: number) {
   return chunks;
 }
 
+function isAirportCard(card: TripCardData) {
+  return (
+    card.category === "transport" &&
+    ((card.name?.includes("공항") ?? false) || (card.location?.includes("공항") ?? false))
+  );
+}
+
+function isAccommodationCard(card: TripCardData) {
+  return card.category === "accommodation";
+}
+
 export default function ArrangePage() {
   const [stockCards, setStockCards] = useState<TripCardData[]>(INITIAL_STOCK_CARDS);
   const [days, setDays] = useState<DayColumn[]>(INITIAL_DAYS);
@@ -538,20 +526,42 @@ export default function ArrangePage() {
   const progress = totalCards > 0 ? Math.round((placedCardsCount / totalCards) * 100) : 0;
 
   const canDrag = (card: TripCardData) =>
-    card.placement_status === "ready" &&
+    (card.placement_status === "ready" ||
+      card.placement_status === "ready_partial") &&
     card.processing_status === "completed" &&
     card.action_type === "review_only";
 
+  const updateProcessingCards = (cards: TripCardData[]) =>
+    cards.map((card) => {
+      if (card.processing_status === "processing" && Math.random() > 0.5) {
+        return { ...card, processing_status: "completed" as const };
+      }
+
+      if (card.processing_status === "pending" && Math.random() > 0.7) {
+        return { ...card, processing_status: "processing" as const };
+      }
+
+      return card;
+    });
+
   const stockSections = useMemo(() => {
-    const availableCards = stockCards.filter(
+    const promotedCards = stockCards.filter(
       (card) =>
-        card.placement_status === "ready" &&
+        (card.placement_status === "ready" ||
+          card.placement_status === "ready_partial") &&
         card.processing_status === "completed" &&
-        card.action_type === "review_only" &&
-        Boolean(card.location)
+        card.action_type === "review_only"
     );
 
-    const availableByLocation = availableCards.reduce<Record<string, TripCardData[]>>(
+    const airportCards = promotedCards.filter(isAirportCard);
+    const accommodationCards = promotedCards.filter(
+      (card) => isAccommodationCard(card) && !isAirportCard(card)
+    );
+    const regionCards = promotedCards.filter(
+      (card) => !isAirportCard(card) && !isAccommodationCard(card)
+    );
+
+    const availableByLocation = regionCards.reduce<Record<string, TripCardData[]>>(
       (accumulator, card) => {
         const key = card.location ?? "기타";
         accumulator[key] = [...(accumulator[key] ?? []), card];
@@ -560,32 +570,61 @@ export default function ArrangePage() {
       {}
     );
 
-    const availableGroups = Object.entries(availableByLocation).flatMap(([location, cards]) =>
-      chunkCards(cards, 5).map((chunk, index) => ({
-        id: `${location}-${index + 1}`,
-        title: cards.length > 5 ? `${location} ${index + 1}` : location,
-        cards: chunk,
-      }))
+    const regionGroups = Object.entries(availableByLocation).flatMap(([location, cards]) =>
+      chunkCards(cards, 5).map((chunk, index) => {
+        const isSplit = cards.length > 5;
+
+        return {
+          id: `${location}-${index + 1}`,
+          title: isSplit ? `${location} ${index + 1}` : location,
+          reason: isSplit
+            ? `${location} 지역 카드가 5개를 넘어 묶음을 나눈 그룹이에요.`
+            : `${location} 기준으로 바로 배치 가능한 카드를 묶은 그룹이에요.`,
+          cards: chunk,
+        };
+      })
+    );
+
+    const promotedGroups = [
+      ...(airportCards.length > 0
+        ? [
+            {
+              id: "airport",
+              title: "공항",
+              reason: "공항 이동과 출발/도착 카드는 별도 흐름으로 관리하기 위해 따로 묶었어요.",
+              cards: airportCards,
+            },
+          ]
+        : []),
+      ...(accommodationCards.length > 0
+        ? [
+            {
+              id: "accommodation",
+              title: "숙소",
+              reason: "숙소 카드는 체크인/체크아웃 기준이 달라 지역 그룹과 분리했어요.",
+              cards: accommodationCards,
+            },
+          ]
+        : []),
+      ...regionGroups,
+    ];
+
+    const unpromotedCards = stockCards.filter(
+      (card) =>
+        !(
+          (card.placement_status === "ready" ||
+            card.placement_status === "ready_partial") &&
+          card.processing_status === "completed" &&
+          card.action_type === "review_only"
+        )
     );
 
     return {
-      available: availableGroups,
-      unavailable: {
-        ready: stockCards.filter(
-          (card) =>
-            card.placement_status === "ready" &&
-            card.processing_status === "completed" &&
-            card.action_type === "review_only" &&
-            !card.location
-        ),
-        input_required: stockCards.filter((card) => card.action_type === "input_required"),
-        select_required: stockCards.filter((card) => card.action_type === "select_required"),
-        fix_required: stockCards.filter((card) => card.action_type === "fix_required"),
-        processing: stockCards.filter(
-          (card) =>
-            card.processing_status === "pending" ||
-            card.processing_status === "processing"
-        ),
+      promoted: promotedGroups,
+      unpromoted: {
+        title: "미승격 카드",
+        reason: "아직 배치 가능 조건을 모두 만족하지 못한 카드들이라 상세 입력이나 AI 처리가 더 필요해요.",
+        cards: unpromotedCards,
       },
     };
   }, [stockCards]);
@@ -695,28 +734,19 @@ export default function ArrangePage() {
     setSelectedCard(updatedCard);
   };
 
+  const handleRefreshStock = () => {
+    setStockCards((prev) => updateProcessingCards(prev));
+    setDays((prev) =>
+      prev.map((day) => ({
+        ...day,
+        cards: updateProcessingCards(day.cards),
+      }))
+    );
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
-      const updateProcessingCards = (cards: TripCardData[]) =>
-        cards.map((card) => {
-          if (card.processing_status === "processing" && Math.random() > 0.5) {
-            return { ...card, processing_status: "completed" as const };
-          }
-
-          if (card.processing_status === "pending" && Math.random() > 0.7) {
-            return { ...card, processing_status: "processing" as const };
-          }
-
-          return card;
-        });
-
-      setStockCards(updateProcessingCards);
-      setDays((prev) =>
-        prev.map((day) => ({
-          ...day,
-          cards: updateProcessingCards(day.cards),
-        }))
-      );
+      handleRefreshStock();
     }, 3000);
 
     return () => clearInterval(interval);
@@ -859,30 +889,45 @@ export default function ArrangePage() {
         >
           <div className="border-b border-[#EBEBEB] p-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-[#1A1A1A]">보관함</h2>
+              <h2 className="font-semibold text-[#1A1A1A]">카드 목록</h2>
               <span className="text-sm text-[#888]">{stockCards.length}개</span>
             </div>
-            <p className="mt-1 text-xs text-[#999]">available은 지역별로, unavailable은 상태별로 나누어 보여줍니다</p>
+            <p className="mt-1 text-xs text-[#999]">승격된 카드와 미승격 카드로 단순화해 보여줍니다</p>
           </div>
 
           <div className="flex-1 space-y-6 overflow-y-auto p-4">
             <section className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold text-[#1A1A1A]">available</h3>
-                  <p className="text-xs text-[#888]">즉시 배치 가능한 카드</p>
+                  <h3 className="text-sm font-semibold text-[#1A1A1A]">승격된 카드</h3>
+                  <p className="text-xs text-[#888]">배치 가능 조건을 만족해 드래그할 수 있는 카드</p>
                 </div>
-                <span className="rounded-full bg-[#EEF2FF] px-2.5 py-1 text-xs font-medium text-[#534AB7]">
-                  {stockSections.available.reduce((sum, group) => sum + group.cards.length, 0)}개
-                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleRefreshStock}
+                    className="flex items-center gap-1 rounded-full border border-[#D8D8E8] bg-white px-2.5 py-1 text-xs font-medium text-[#534AB7] transition-colors hover:bg-[#F6F5FF]"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+                      <path d="M21 3v6h-6" />
+                    </svg>
+                    새로고침
+                  </button>
+                  <span className="rounded-full bg-[#EEF2FF] px-2.5 py-1 text-xs font-medium text-[#534AB7]">
+                    {stockSections.promoted.reduce((sum, group) => sum + group.cards.length, 0)}개
+                  </span>
+                </div>
               </div>
 
-              {stockSections.available.length > 0 ? (
-                stockSections.available.map((group) => (
+              {stockSections.promoted.length > 0 ? (
+                stockSections.promoted.map((group) => (
                   <div key={group.id} className="rounded-2xl border border-[#E8E8E8] bg-[#FAFAFA] p-3">
-                    <div className="mb-3 flex items-center justify-between">
-                      <h4 className="text-sm font-semibold text-[#1A1A1A]">{group.title}</h4>
-                      <span className="text-xs text-[#888]">{group.cards.length}개</span>
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-semibold text-[#1A1A1A]">{group.title}</h4>
+                        <span className="text-xs text-[#888]">{group.cards.length}개</span>
+                      </div>
+                      <p className="mt-1 text-xs text-[#888]">{group.reason}</p>
                     </div>
                     <div className="space-y-3">
                       {group.cards.map((card) => renderStockCard(card, "stock"))}
@@ -899,39 +944,33 @@ export default function ArrangePage() {
             <section className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold text-[#1A1A1A]">unavailable</h3>
-                  <p className="text-xs text-[#888]">지금은 바로 배치할 수 없는 카드</p>
+                  <h3 className="text-sm font-semibold text-[#1A1A1A]">미승격 카드</h3>
+                  <p className="text-xs text-[#888]">아직 배치 가능 상태로 올라오지 않은 카드</p>
                 </div>
                 <span className="rounded-full bg-[#F3F4F6] px-2.5 py-1 text-xs font-medium text-[#6B7280]">
-                  {Object.values(stockSections.unavailable).reduce((sum, cards) => sum + cards.length, 0)}개
+                  {stockSections.unpromoted.cards.length}개
                 </span>
               </div>
 
-              {Object.entries(UNAVAILABLE_META).map(([key, meta]) => {
-                const cards = stockSections.unavailable[key as keyof typeof stockSections.unavailable];
-
-                return (
-                  <div key={key} className="rounded-2xl border border-[#E8E8E8] bg-[#FCFCFC] p-3">
-                    <div className="mb-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-semibold text-[#1A1A1A]">{meta.title}</h4>
-                        <span className="text-xs text-[#888]">{cards.length}개</span>
-                      </div>
-                      <p className="mt-1 text-xs text-[#888]">{meta.description}</p>
-                    </div>
-
-                    {cards.length > 0 ? (
-                      <div className="space-y-3">
-                        {cards.map((card) => renderStockCard(card, "stock"))}
-                      </div>
-                    ) : (
-                      <div className="rounded-xl border border-dashed border-[#E5E5E5] bg-white px-3 py-4 text-xs text-[#AAA]">
-                        이 섹션에는 아직 카드가 없어요.
-                      </div>
-                    )}
+              <div className="rounded-2xl border border-[#E8E8E8] bg-[#FCFCFC] p-3">
+                <div className="mb-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold text-[#1A1A1A]">{stockSections.unpromoted.title}</h4>
+                    <span className="text-xs text-[#888]">{stockSections.unpromoted.cards.length}개</span>
                   </div>
-                );
-              })}
+                  <p className="mt-1 text-xs text-[#888]">{stockSections.unpromoted.reason}</p>
+                </div>
+
+                {stockSections.unpromoted.cards.length > 0 ? (
+                  <div className="space-y-3">
+                    {stockSections.unpromoted.cards.map((card) => renderStockCard(card, "stock"))}
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-[#E5E5E5] bg-white px-3 py-4 text-xs text-[#AAA]">
+                    현재 미승격 카드는 없어요.
+                  </div>
+                )}
+              </div>
             </section>
           </div>
         </div>

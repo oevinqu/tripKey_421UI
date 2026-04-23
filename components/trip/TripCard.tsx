@@ -3,7 +3,6 @@
 import {
   TripCardData,
   CLASSIFICATION_COLORS,
-  CLASSIFICATION_LABELS,
   CATEGORY_CONFIG,
 } from "@/types/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -137,26 +136,24 @@ export function TripCard({
 
       {/* 메인 콘텐츠 */}
       <div className="flex-1 pl-3">
-        {/* 상단: 배지 + 경고 아이콘 */}
+        {/* 상단: 이름 Spacer 카테고리 + 상태 아이콘 */}
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            {/* 분류 배지 */}
-            <span
-              className="text-xs font-medium px-2 py-0.5 rounded-full"
-              style={{
-                backgroundColor: classificationColor.bg,
-                color: classificationColor.text,
-              }}
-            >
-              {CLASSIFICATION_LABELS[card.classification]}
-            </span>
-            
-            {/* 카테고리 배지 */}
-            <span className="flex items-center gap-1 text-xs text-[#888] bg-[#F5F5F5] px-2 py-0.5 rounded-full">
-              {renderCategoryIcon()}
-              {categoryConfig.label}
-            </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-2">
+              <h3 className={`truncate font-semibold text-[#1A1A1A] ${compact ? "text-sm" : "text-base"}`}>
+                {card.name}
+              </h3>
 
+              <div className="flex-1" />
+
+              <span className="flex shrink-0 items-center gap-1 text-xs text-[#888]">
+                {renderCategoryIcon()}
+                {categoryConfig.label}
+              </span>
+            </div>
+          </div>
+
+          <div className="ml-3 flex items-center gap-2">
             {/* 처리 상태 배지 */}
             {card.processing_status === "processing" && (
               <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-[#EEF2FF] text-[#534AB7]">
@@ -211,11 +208,6 @@ export function TripCard({
             </div>
           )}
         </div>
-
-        {/* 제목 */}
-        <h3 className={`font-semibold text-[#1A1A1A] ${compact ? "text-sm" : "text-base"}`}>
-          {card.name}
-        </h3>
 
         {/* 부가 정보 */}
         {!compact && (
