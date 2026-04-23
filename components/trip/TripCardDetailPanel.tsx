@@ -321,7 +321,8 @@ export function TripCardDetailPanel({
         : structuredName.trim() || card.name;
 
     const nextClassification =
-      isOpenQuestionReview && openQuestionDecision !== "include"
+      card.classification === "open_question" &&
+      (!isOpenQuestionReview || openQuestionDecision !== "include")
         ? card.classification
         : ("confirmed" as Classification);
 

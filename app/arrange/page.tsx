@@ -417,8 +417,6 @@ interface EditingTimeState {
 interface FixedDaySlotConfig {
   startTimeCardId?: string;
   endTimeCardId?: string;
-  topCardIds?: string[];
-  bottomCardIds?: string[];
 }
 
 function matchesDestination(card: TripCardData, destination: string | null) {
@@ -437,6 +435,9 @@ const ACCOMMODATION_PROCESSING_REASON =
   "입력한 숙소 정보를 바탕으로 예약 내용을 정리하고 있어요. 잠시 후 확정 카드로 바뀝니다.";
 const TRANSPORT_PROCESSING_REASON =
   "입력한 항공권 정보를 바탕으로 공항과 시간 맥락을 다시 정리하고 있어요. 잠시 후 반영됩니다.";
+const REORDER_PENDING_GROUP_LABEL = "새로 정리된 카드";
+const REORDER_PENDING_GROUP_REASON =
+  "방금 추가한 카드예요. 재정렬을 누르면 지역/거리 기준 그룹에 반영됩니다.";
 const FIXED_DAY_SLOTS: Record<string, FixedDaySlotConfig> = {
   day1: {
     startTimeCardId: "arr-11",
@@ -590,8 +591,6 @@ export default function ArrangePage() {
         {
           startTimeCard?: TripCardData;
           endTimeCard?: TripCardData;
-          topCards: TripCardData[];
-          bottomCards: TripCardData[];
         }
       >
     >((accumulator, day) => {
@@ -600,12 +599,6 @@ export default function ArrangePage() {
       accumulator[day.id] = {
         startTimeCard: config.startTimeCardId ? cardMap.get(config.startTimeCardId) : undefined,
         endTimeCard: config.endTimeCardId ? cardMap.get(config.endTimeCardId) : undefined,
-        topCards: (config.topCardIds ?? [])
-          .map((id) => cardMap.get(id))
-          .filter((card): card is TripCardData => Boolean(card)),
-        bottomCards: (config.bottomCardIds ?? [])
-          .map((id) => cardMap.get(id))
-          .filter((card): card is TripCardData => Boolean(card)),
       };
 
       return accumulator;
@@ -626,17 +619,11 @@ export default function ArrangePage() {
               entry.endTimeCard && matchesDestination(entry.endTimeCard, destinationFilter)
                 ? entry.endTimeCard
                 : undefined,
-            topCards: entry.topCards.filter((card) => matchesDestination(card, destinationFilter)),
-            bottomCards: entry.bottomCards.filter((card) =>
-              matchesDestination(card, destinationFilter)
-            ),
           },
         ])
       ) as Record<string, {
         startTimeCard?: TripCardData;
         endTimeCard?: TripCardData;
-        topCards: TripCardData[];
-        bottomCards: TripCardData[];
       }>,
     [destinationFilter, fixedCardsByDay]
   );
@@ -645,8 +632,6 @@ export default function ArrangePage() {
     Object.values(fixedCardsByDay).flatMap((entry) => [
       ...(entry.startTimeCard ? [entry.startTimeCard.instance_id] : []),
       ...(entry.endTimeCard ? [entry.endTimeCard.instance_id] : []),
-      ...entry.topCards.map((card) => card.instance_id),
-      ...entry.bottomCards.map((card) => card.instance_id),
     ])
   );
 
@@ -665,15 +650,39 @@ export default function ArrangePage() {
       card.placement_status === "ready_partial") &&
     card.processing_status === "completed";
 
-  const updateProcessingCards = (cards: TripCardData[]) =>
+  const updateProcessingCards = (
+    cards: TripCardData[],
+    options: { releaseReorderPending?: boolean } = {}
+  ) =>
     cards.map((card) => {
+      if (
+        options.releaseReorderPending &&
+        card.group_label === REORDER_PENDING_GROUP_LABEL
+      ) {
+        return {
+          ...card,
+          group_label: undefined,
+          group_reason: undefined,
+        };
+      }
+
       if (
         card.source === "manual" &&
         card.processing_status === "processing" &&
         card.processing_started_at &&
         Date.now() - card.processing_started_at >= 2500
       ) {
-        return finalizeProcessingTripCard(card);
+        const finalizedCard = finalizeProcessingTripCard(card);
+
+        if (options.releaseReorderPending) {
+          return finalizedCard;
+        }
+
+        return {
+          ...finalizedCard,
+          group_label: REORDER_PENDING_GROUP_LABEL,
+          group_reason: REORDER_PENDING_GROUP_REASON,
+        };
       }
 
       if (isStructuredEditableCard(card) && card.processing_status === "processing") {
@@ -731,8 +740,6 @@ export default function ArrangePage() {
         [
           fixedEntry.startTimeCard,
           fixedEntry.endTimeCard,
-          ...fixedEntry.topCards,
-          ...fixedEntry.bottomCards,
         ]
           .filter((card): card is TripCardData => Boolean(card))
           .flatMap((card) =>
@@ -1175,12 +1182,12 @@ export default function ArrangePage() {
     }
   };
 
-  const handleRefreshStock = () => {
-    setStockCards((prev) => updateProcessingCards(prev));
+  const handleRefreshStock = (releaseReorderPending = true) => {
+    setStockCards((prev) => updateProcessingCards(prev, { releaseReorderPending }));
     setDays((prev) =>
       prev.map((day) => ({
         ...day,
-        cards: updateProcessingCards(day.cards),
+        cards: updateProcessingCards(day.cards, { releaseReorderPending }),
       }))
     );
   };
@@ -1250,7 +1257,7 @@ export default function ArrangePage() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      handleRefreshStock();
+      handleRefreshStock(false);
     }, 3000);
 
     return () => clearInterval(interval);
@@ -1402,33 +1409,8 @@ export default function ArrangePage() {
     );
   };
 
-  const renderFixedStayBlock = (
-    dayId: string,
-    card: TripCardData,
-    anchor: "top" | "bottom"
-  ) => (
-    <div key={`${dayId}-${card.instance_id}-${anchor}`} className="rounded-2xl border border-[#E5E0F8] bg-white p-2 shadow-sm">
-      <div className="mb-2 flex items-center justify-between px-1">
-        <div>
-          <p className="text-[11px] font-semibold tracking-[0.08em] text-[#8A84B5]">
-            {anchor === "top" ? "고정 숙소 시작점" : "고정 숙소 마무리"}
-          </p>
-          <p className="mt-0.5 text-[11px] text-[#888]">
-            {anchor === "top"
-              ? "이 날은 숙소에서 시작하는 흐름으로 가정했어요."
-              : "이 날은 숙소에서 마무리되는 흐름으로 가정했어요."}
-          </p>
-        </div>
-        <span className="rounded-full bg-[#F6F5FF] px-2 py-1 text-[10px] font-semibold text-[#534AB7]">
-          고정
-        </span>
-      </div>
-      <TripCard card={card} onClick={() => handleCardClick(card)} compact />
-    </div>
-  );
-
   return (
-    <div className="flex min-h-screen flex-col bg-[#F5F5F3] font-sans">
+    <div className="flex h-screen flex-col overflow-hidden bg-[#F5F5F3] font-sans">
       <MainHeader />
       <SubHeader
         currentStep={currentStep}
@@ -1495,9 +1477,9 @@ export default function ArrangePage() {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         <div
-          className="flex w-[28rem] flex-col border-r border-[#EBEBEB] bg-white"
+          className="flex min-h-0 w-[28rem] flex-col border-r border-[#EBEBEB] bg-white"
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDropOnStock}
         >
@@ -1506,7 +1488,7 @@ export default function ArrangePage() {
               <h2 className="font-semibold text-[#1A1A1A]">카드 목록</h2>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={handleRefreshStock}
+                  onClick={() => handleRefreshStock(true)}
                   className="flex items-center gap-1 rounded-full border border-[#D8D8E8] bg-white px-2.5 py-1 text-xs font-medium text-[#534AB7] transition-colors hover:bg-[#F6F5FF]"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1529,7 +1511,7 @@ export default function ArrangePage() {
             )}
           </div>
 
-          <div className="flex-1 space-y-6 overflow-y-auto p-4">
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4">
             {stockSections.special.map((group) => (
               <div key={group.id} className="rounded-2xl border border-[#E8E8E8] bg-[#FAFAFA] p-3">
                 <div className="mb-3">
@@ -1606,12 +1588,12 @@ export default function ArrangePage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-x-auto">
-          <div className="flex min-w-max gap-4 p-6">
+        <div className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden">
+          <div className="flex h-full min-w-max gap-4 p-6">
             {days.map((day) => (
               <div
                 key={day.id}
-                className={`w-72 flex-shrink-0 rounded-xl border-2 border-dashed bg-[#FAFAFA] transition-colors ${
+                className={`flex h-full w-72 flex-shrink-0 flex-col overflow-hidden rounded-xl border-2 border-dashed bg-[#FAFAFA] transition-colors ${
                   draggedCard && dragSource !== day.id
                     ? "border-[#534AB7] bg-[#F9F8FF]"
                     : "border-[#E0E0E0]"
@@ -1627,13 +1609,11 @@ export default function ArrangePage() {
                   const totalCount =
                     visibleDayCards.length +
                     (fixedEntry?.startTimeCard ? 1 : 0) +
-                    (fixedEntry?.endTimeCard ? 1 : 0) +
-                    (fixedEntry?.topCards.length ?? 0) +
-                    (fixedEntry?.bottomCards.length ?? 0);
+                    (fixedEntry?.endTimeCard ? 1 : 0);
 
                   return (
                     <>
-                <div className="rounded-t-xl border-b border-[#E8E8E8] bg-white p-4">
+                <div className="shrink-0 rounded-t-xl border-b border-[#E8E8E8] bg-white p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-semibold text-[#1A1A1A]">{day.label}</h3>
@@ -1643,10 +1623,8 @@ export default function ArrangePage() {
                   </div>
                 </div>
 
-                <div className="min-h-[400px] space-y-3 p-3">
+                <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
                   {fixedEntry?.startTimeCard && renderFixedTimeBlock(fixedEntry.startTimeCard, "start")}
-
-                  {fixedEntry?.topCards.map((card) => renderFixedStayBlock(day.id, card, "top"))}
 
                   {visibleDayCards.map((card) => {
                     const index = day.cards.findIndex(
@@ -1755,9 +1733,7 @@ export default function ArrangePage() {
 
                   {visibleDayCards.length === 0 &&
                     !fixedEntry?.startTimeCard &&
-                    !fixedEntry?.endTimeCard &&
-                    (fixedEntry?.topCards.length ?? 0) === 0 &&
-                    (fixedEntry?.bottomCards.length ?? 0) === 0 && (
+                    !fixedEntry?.endTimeCard && (
                     <div className="flex h-32 flex-col items-center justify-center text-[#B0B0B0]">
                       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mb-2">
                         <path d="M12 5v14M5 12h14" />
@@ -1765,8 +1741,6 @@ export default function ArrangePage() {
                       <p className="text-xs">카드를 여기에 드롭하세요</p>
                     </div>
                   )}
-
-                  {fixedEntry?.bottomCards.map((card) => renderFixedStayBlock(day.id, card, "bottom"))}
 
                   {fixedEntry?.endTimeCard && renderFixedTimeBlock(fixedEntry.endTimeCard, "end")}
                 </div>
