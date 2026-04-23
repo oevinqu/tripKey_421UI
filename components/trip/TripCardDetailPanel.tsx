@@ -174,11 +174,29 @@ export function TripCardDetailPanel({
   const [answerValue, setAnswerValue] = useState("");
   const [memoValue, setMemoValue] = useState("");
   const [selectedOptionIds, setSelectedOptionIds] = useState<string[]>([]);
+  const [openQuestionDecision, setOpenQuestionDecision] = useState<"include" | "exclude" | null>(
+    null
+  );
+  const [structuredName, setStructuredName] = useState("");
+  const [structuredLocation, setStructuredLocation] = useState("");
+  const [structuredPrimaryTime, setStructuredPrimaryTime] = useState("");
+  const [structuredSecondaryTime, setStructuredSecondaryTime] = useState("");
+  const [structuredFlightNumber, setStructuredFlightNumber] = useState("");
 
   useEffect(() => {
     setAnswerValue(card?.notes ?? "");
     setMemoValue(card?.memo ?? "");
     setSelectedOptionIds([]);
+    setOpenQuestionDecision(null);
+    setStructuredName(card?.name ?? "");
+    setStructuredLocation(card?.location ?? card?.address ?? "");
+    setStructuredPrimaryTime(
+      card?.category === "accommodation"
+        ? card?.check_in ?? ""
+        : card?.time_constraint ?? ""
+    );
+    setStructuredSecondaryTime(card?.check_out ?? "");
+    setStructuredFlightNumber(card?.flight_number ?? "");
   }, [card]);
 
   const estimatedDurationLabel = useMemo(
@@ -191,7 +209,20 @@ export function TripCardDetailPanel({
   const classificationColor = CLASSIFICATION_COLORS[card.classification];
   const categoryConfig = CATEGORY_CONFIG[card.category];
   const isAccommodation = card.category === "accommodation";
+  const isTransport = card.category === "transport";
+  const isStructuredEditableCategory = isAccommodation || isTransport;
   const memoChanged = (memoValue.trim() || null) !== (card.memo ?? null);
+  const structuredValuesChanged =
+    structuredName.trim() !== (card.name ?? "").trim() ||
+    structuredLocation.trim() !== ((card.location ?? card.address ?? "").trim()) ||
+    structuredPrimaryTime.trim() !==
+      (
+        card.category === "accommodation"
+          ? card.check_in ?? ""
+          : card.time_constraint ?? ""
+      ).trim() ||
+    structuredSecondaryTime.trim() !== (card.check_out ?? "").trim() ||
+    structuredFlightNumber.trim() !== (card.flight_number ?? "").trim();
 
   const statusPlacementLabel =
     card.placement_status === "ready"
@@ -203,21 +234,13 @@ export function TripCardDetailPanel({
           : "배치 불가";
 
   const notesForReviewOnly = card.action_type === "review_only" ? card.notes : null;
-  const accommodationTimeLabel =
-    card.category === "accommodation"
-      ? card.time_constraint?.includes("체크아웃")
-        ? "체크아웃"
-        : "체크인"
-      : card.category === "transport"
-        ? card.time_constraint?.includes("출발")
-          ? "출발"
-          : "도착"
-        : "시간 제약";
-
   const hasDetailInfo =
     Boolean(card.location) ||
     Boolean(card.address) ||
     Boolean(card.time_constraint) ||
+    Boolean(card.check_in) ||
+    Boolean(card.check_out) ||
+    Boolean(card.flight_number) ||
     Boolean(estimatedDurationLabel) ||
     Boolean(card.user_context) ||
     Boolean(card.tips) ||
@@ -248,12 +271,18 @@ export function TripCardDetailPanel({
     supportsMultiSelect ||
     (card.action_type === "select_required" &&
       (!card.options || card.options.length === 0));
-  const shouldShowAccommodationChangeInput =
-    isAccommodation && card.action_type === "review_only";
+  const shouldShowStructuredChangeInput =
+    isStructuredEditableCategory && card.action_type === "review_only";
+  const isOpenQuestionReview =
+    card.classification === "open_question" && card.action_type === "review_only";
 
   const confirmDisabled =
-    isAccommodation
-      ? !answerValue.trim() && !memoChanged && card.action_type === "review_only"
+    isOpenQuestionReview
+      ? openQuestionDecision === null
+      : shouldShowStructuredChangeInput
+      ? isAccommodation
+        ? !structuredName.trim() || !structuredLocation.trim() || !structuredValuesChanged
+        : !structuredLocation.trim() || !structuredPrimaryTime.trim() || !structuredValuesChanged
       : needsAnswer && selectedOptionIds.length === 0 && !answerValue.trim();
 
   const toggleOption = (optionId: string) => {
@@ -273,7 +302,7 @@ export function TripCardDetailPanel({
     if (!onUpdateCard) return;
 
     const shouldTriggerProcessing =
-      isAccommodation ||
+      shouldShowStructuredChangeInput ||
       card.processing_status === "failed" ||
       card.placement_status === "needs_input";
 
@@ -286,14 +315,55 @@ export function TripCardDetailPanel({
       .filter(Boolean)
       .join(selectedLabels.length > 0 && answerValue.trim() ? "\n" : "");
 
+    const nextName =
+      isTransport && !card.name.includes("도착") && !card.name.includes("출발")
+        ? `${structuredLocation.trim()} 항공권`
+        : structuredName.trim() || card.name;
+
+    const nextClassification =
+      isOpenQuestionReview && openQuestionDecision !== "include"
+        ? card.classification
+        : ("confirmed" as Classification);
+
     const updatedCard: TripCardData = {
       ...card,
-      classification: "confirmed" as Classification,
-      placement_status: "ready",
+      classification: nextClassification,
+      placement_status:
+        isOpenQuestionReview && openQuestionDecision !== "include"
+          ? card.placement_status
+          : "ready",
       action_type: "review_only",
       processing_status: shouldTriggerProcessing ? "processing" : card.processing_status,
+      is_excluded:
+        isOpenQuestionReview && openQuestionDecision === "exclude"
+          ? true
+          : card.is_excluded,
+      name: shouldShowStructuredChangeInput ? nextName : card.name,
+      location: shouldShowStructuredChangeInput
+        ? structuredLocation.trim() || undefined
+        : card.location,
+      address:
+        shouldShowStructuredChangeInput && isAccommodation
+          ? structuredLocation.trim() || undefined
+          : card.address,
+      check_in:
+        shouldShowStructuredChangeInput && isAccommodation
+          ? structuredPrimaryTime.trim() || null
+          : card.check_in,
+      check_out:
+        shouldShowStructuredChangeInput && isAccommodation
+          ? structuredSecondaryTime.trim() || null
+          : card.check_out,
+      time_constraint:
+        shouldShowStructuredChangeInput && isTransport
+          ? structuredPrimaryTime.trim() || null
+          : card.time_constraint,
+      flight_number:
+        shouldShowStructuredChangeInput && isTransport
+          ? structuredFlightNumber.trim() || null
+          : card.flight_number,
       notes:
-        needsAnswer || shouldShowAccommodationChangeInput
+        needsAnswer
           ? combinedAnswer || answerValue.trim() || card.notes
           : card.notes,
       memo: memoValue.trim() || null,
@@ -416,14 +486,52 @@ export function TripCardDetailPanel({
                 />
               )}
 
-              {card.time_constraint && (
+              {card.check_in && (
                 <InfoRow
-                  label={accommodationTimeLabel}
+                  label="체크인"
+                  value={card.check_in}
+                  icon={
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12,6 12,12 16,14" />
+                    </svg>
+                  }
+                />
+              )}
+
+              {card.check_out && (
+                <InfoRow
+                  label="체크아웃"
+                  value={card.check_out}
+                  icon={
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12,6 12,12 16,14" />
+                    </svg>
+                  }
+                />
+              )}
+
+              {!isAccommodation && card.time_constraint && (
+                <InfoRow
+                  label={isTransport ? "시간" : "시간 제약"}
                   value={card.time_constraint}
                   icon={
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12,6 12,12 16,14" />
+                    </svg>
+                  }
+                />
+              )}
+
+              {card.flight_number && (
+                <InfoRow
+                  label="항공편"
+                  value={card.flight_number}
+                  icon={
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
+                      <path d="M21 16V8c0-.6-.4-1-1-1h-3l-3-4h-4L7 7H4c-.6 0-1 .4-1 1v8c0 .6.4 1 1 1h16c.6 0 1-.4 1-1z" />
                     </svg>
                   }
                 />
@@ -553,22 +661,117 @@ export function TripCardDetailPanel({
             </div>
           )}
 
-          {shouldShowAccommodationChangeInput && (
+          {isOpenQuestionReview && (
             <div className="space-y-4 border-t border-[#EBEBEB] pt-6">
-              <h4 className="text-sm font-semibold text-[#1A1A1A]">숙소 정보 변경</h4>
+              <div>
+                <h4 className="text-sm font-semibold text-[#1A1A1A]">포함 여부 선택</h4>
+                <p className="mt-1 text-xs leading-relaxed text-[#888]">
+                  지금 바로 확정하지 않아도 괜찮아요. 포함하거나 제외할 때만 반영됩니다.
+                </p>
+              </div>
+              {card.question_text && (
+                <div className="rounded-xl border border-[#DBEAFE] bg-[#EFF6FF] p-4">
+                  <p className="mb-1 text-xs font-medium text-[#1D4ED8]">검토 포인트</p>
+                  <p className="text-sm font-medium text-[#1E3A8A]">{card.question_text}</p>
+                </div>
+              )}
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button
+                  onClick={() => setOpenQuestionDecision("include")}
+                  className={`rounded-xl border px-4 py-3 text-left text-sm transition-colors ${
+                    openQuestionDecision === "include"
+                      ? "border-[#534AB7] bg-[#F3F1FE] text-[#3D3592]"
+                      : "border-[#E0E0E0] bg-white text-[#666] hover:border-[#534AB7]"
+                  }`}
+                >
+                  포함할게요
+                </button>
+                <button
+                  onClick={() => setOpenQuestionDecision("exclude")}
+                  className={`rounded-xl border px-4 py-3 text-left text-sm transition-colors ${
+                    openQuestionDecision === "exclude"
+                      ? "border-[#DC2626] bg-[#FEF2F2] text-[#991B1B]"
+                      : "border-[#E0E0E0] bg-white text-[#666] hover:border-[#DC2626]"
+                  }`}
+                >
+                  이번엔 제외할게요
+                </button>
+              </div>
+            </div>
+          )}
+
+          {shouldShowStructuredChangeInput && (
+            <div className="space-y-4 border-t border-[#EBEBEB] pt-6">
+              <h4 className="text-sm font-semibold text-[#1A1A1A]">
+                {isAccommodation ? "숙소 정보 변경" : "항공권 정보 변경"}
+              </h4>
               <div className="rounded-xl border border-[#E0E0E0] bg-[#FAFAFA] p-4">
-                <label className="mb-1.5 block text-xs font-medium text-[#666]">
-                  변경된 숙소 정보
-                </label>
-                <input
-                  type="text"
-                  value={answerValue}
-                  onChange={(e) => setAnswerValue(e.target.value)}
-                  placeholder="예: 교토역 근처 다른 게스트하우스, 주소는 ..."
-                  className="w-full rounded-lg border border-[#E0E0E0] bg-white px-3 py-2.5 text-sm text-[#1A1A1A] transition-colors placeholder:text-[#B0B0B0] focus:border-[#534AB7] focus:outline-none"
-                />
+                <div className={`grid gap-3 ${isAccommodation ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+                  {isAccommodation && (
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-[#666]">숙소명</label>
+                      <input
+                        type="text"
+                        value={structuredName}
+                        onChange={(e) => setStructuredName(e.target.value)}
+                        placeholder="예: 교토역 근처 게스트하우스"
+                        className="w-full rounded-lg border border-[#E0E0E0] bg-white px-3 py-2.5 text-sm text-[#1A1A1A] transition-colors placeholder:text-[#B0B0B0] focus:border-[#534AB7] focus:outline-none"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-[#666]">
+                      {isAccommodation ? "위치" : "공항"}
+                    </label>
+                    <input
+                      type="text"
+                      value={structuredLocation}
+                      onChange={(e) => setStructuredLocation(e.target.value)}
+                      placeholder={isAccommodation ? "예: 교토역 도보 5분" : "예: 간사이 국제공항"}
+                      className="w-full rounded-lg border border-[#E0E0E0] bg-white px-3 py-2.5 text-sm text-[#1A1A1A] transition-colors placeholder:text-[#B0B0B0] focus:border-[#534AB7] focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-[#666]">
+                      {isAccommodation ? "체크인" : "시간"}
+                    </label>
+                    <input
+                      type="text"
+                      value={structuredPrimaryTime}
+                      onChange={(e) => setStructuredPrimaryTime(e.target.value)}
+                      placeholder={isAccommodation ? "예: 5월 10일 15:00" : "예: 도착 11:20"}
+                      className="w-full rounded-lg border border-[#E0E0E0] bg-white px-3 py-2.5 text-sm text-[#1A1A1A] transition-colors placeholder:text-[#B0B0B0] focus:border-[#534AB7] focus:outline-none"
+                    />
+                  </div>
+                  {isAccommodation && (
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-[#666]">체크아웃</label>
+                      <input
+                        type="text"
+                        value={structuredSecondaryTime}
+                        onChange={(e) => setStructuredSecondaryTime(e.target.value)}
+                        placeholder="예: 5월 12일 11:00"
+                        className="w-full rounded-lg border border-[#E0E0E0] bg-white px-3 py-2.5 text-sm text-[#1A1A1A] transition-colors placeholder:text-[#B0B0B0] focus:border-[#534AB7] focus:outline-none"
+                      />
+                    </div>
+                  )}
+                  {isTransport && (
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-[#666]">항공편 (선택)</label>
+                      <input
+                        type="text"
+                        value={structuredFlightNumber}
+                        onChange={(e) => setStructuredFlightNumber(e.target.value)}
+                        placeholder="예: KE123"
+                        className="w-full rounded-lg border border-[#E0E0E0] bg-white px-3 py-2.5 text-sm text-[#1A1A1A] transition-colors placeholder:text-[#B0B0B0] focus:border-[#534AB7] focus:outline-none"
+                      />
+                    </div>
+                  )}
+                </div>
                 <p className="mt-2 text-xs text-[#888]">
-                  숙소 이름이나 주소처럼 바뀐 핵심 정보만 적어주세요. 이후 AI가 다시 정리해요.
+                  {isAccommodation
+                    ? "숙소 이름이나 주소처럼 바뀐 핵심 정보만 적어주세요. 이후 AI가 다시 정리해요."
+                    : "공항과 시간 정보를 바탕으로 항공권 맥락을 다시 정리해요."}
                 </p>
               </div>
             </div>
@@ -583,7 +786,7 @@ export function TripCardDetailPanel({
               className="w-full resize-none rounded-xl border border-[#E0E0E0] bg-white p-4 text-sm transition-all focus:border-[#534AB7] focus:outline-none focus:ring-2 focus:ring-[#534AB7]/20"
               rows={4}
             />
-            {!isAccommodation && (
+            {!isStructuredEditableCategory && (
               <p className="text-xs leading-relaxed text-[#888]">
                 메모는 04 추천 흐름에 조용히 반영되고, 처리 후에는 AI 맥락 내용만 업데이트돼요.
               </p>
@@ -657,7 +860,7 @@ export function TripCardDetailPanel({
             >
               닫기
             </button>
-            {!card.is_excluded && isAccommodation && (
+            {!card.is_excluded && isStructuredEditableCategory && (
               <button
                 onClick={handleConfirm}
                 disabled={confirmDisabled}
@@ -666,7 +869,7 @@ export function TripCardDetailPanel({
                 {card.action_type === "review_only" ? "변경하기" : "확인하기"}
               </button>
             )}
-            {!card.is_excluded && !isAccommodation && card.action_type !== "review_only" && (
+            {!card.is_excluded && !isStructuredEditableCategory && card.action_type !== "review_only" && (
               <button
                 onClick={handleConfirm}
                 disabled={confirmDisabled}
@@ -675,7 +878,16 @@ export function TripCardDetailPanel({
                 확인하기
               </button>
             )}
-            {!card.is_excluded && !isAccommodation && (
+            {!card.is_excluded && isOpenQuestionReview && (
+              <button
+                onClick={handleConfirm}
+                disabled={confirmDisabled}
+                className="flex-1 rounded-xl bg-[#534AB7] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#4840A0] disabled:cursor-not-allowed disabled:bg-[#E0E0E0] disabled:text-[#999]"
+              >
+                선택 반영
+              </button>
+            )}
+            {!card.is_excluded && !isStructuredEditableCategory && (
               <button
                 onClick={handleSaveMemo}
                 disabled={!memoChanged}

@@ -7,6 +7,9 @@ export interface NewTripCardInput {
   estimatedDurationMin: number | null;
   timeConstraint: string | null;
   memo: string | null;
+  checkIn?: string | null;
+  checkOut?: string | null;
+  flightNumber?: string | null;
 }
 
 export function getDefaultAllowDuplicate(category: CardCategory) {
@@ -21,6 +24,9 @@ export function createProcessingTripCard(
   const trimmedLocation = input.location.trim();
   const trimmedMemo = input.memo?.trim() || null;
   const trimmedTimeConstraint = input.timeConstraint?.trim() || null;
+  const trimmedCheckIn = input.checkIn?.trim() || null;
+  const trimmedCheckOut = input.checkOut?.trim() || null;
+  const trimmedFlightNumber = input.flightNumber?.trim() || null;
 
   return {
     instance_id: `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -48,6 +54,9 @@ export function createProcessingTripCard(
     day: null,
     notes: null,
     memo: trimmedMemo,
+    check_in: trimmedCheckIn,
+    check_out: trimmedCheckOut,
+    flight_number: trimmedFlightNumber,
     location: trimmedLocation || undefined,
     processing_started_at: Date.now(),
   };

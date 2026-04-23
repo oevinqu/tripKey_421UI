@@ -53,6 +53,9 @@ export interface TripCardData {
   group_label?: string;
   group_reason?: string;
   processing_started_at?: number | null;
+  check_in?: string | null;
+  check_out?: string | null;
+  flight_number?: string | null;
 
   // 기존 UI에서 사용 중인 선택 필드
   location?: string;

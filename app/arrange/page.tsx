@@ -134,7 +134,7 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     classification: "open_question",
     placement_status: "ready_partial",
     processing_status: "completed",
-    action_type: "select_required",
+    action_type: "review_only",
     can_exclude: true,
     allow_duplicate: false,
     is_excluded: false,
@@ -164,7 +164,7 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     classification: "open_question",
     placement_status: "ready_partial",
     processing_status: "completed",
-    action_type: "select_required",
+    action_type: "review_only",
     can_exclude: true,
     allow_duplicate: false,
     is_excluded: false,
@@ -191,7 +191,7 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     instance_id: "arr-7",
     place_id: null,
     name: "와사카 성",
-    category: "place",
+    category: "etc",
     classification: "open_question",
     placement_status: "blocked",
     processing_status: "failed",
@@ -208,11 +208,11 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     blocked_reason: "오타인 것 같아요",
     user_context: "AI가 장소명을 잘못 해석했을 가능성이 있어요",
     tips: "정확한 장소명으로 수정하면 이후 배치가 쉬워져요",
-    tags: ["오사카", "AI 후보"],
+    tags: ["AI 후보"],
     source: "dump",
     day: null,
     notes: null,
-    location: "오사카",
+    location: undefined,
   },
   {
     instance_id: "arr-8",
@@ -222,7 +222,7 @@ const INITIAL_STOCK_CARDS: TripCardData[] = [
     classification: "open_question",
     placement_status: "ready_partial",
     processing_status: "completed",
-    action_type: "input_required",
+    action_type: "review_only",
     can_exclude: false,
     allow_duplicate: true,
     is_excluded: false,
@@ -435,19 +435,13 @@ const DOTONBORI_SPLIT_REASON =
   "선택한 맛집 후보를 세부 카드로 분리해 정리하고 있어요. processing이 끝나면 바로 배치할 수 있습니다.";
 const ACCOMMODATION_PROCESSING_REASON =
   "입력한 숙소 정보를 바탕으로 예약 내용을 정리하고 있어요. 잠시 후 확정 카드로 바뀝니다.";
+const TRANSPORT_PROCESSING_REASON =
+  "입력한 항공권 정보를 바탕으로 공항과 시간 맥락을 다시 정리하고 있어요. 잠시 후 반영됩니다.";
 const FIXED_DAY_SLOTS: Record<string, FixedDaySlotConfig> = {
   day1: {
     startTimeCardId: "arr-11",
-    bottomCardIds: ["arr-9"],
-  },
-  day2: {
-    topCardIds: ["arr-9"],
-  },
-  day4: {
-    bottomCardIds: ["arr-10"],
   },
   day5: {
-    topCardIds: ["arr-10"],
     endTimeCardId: "arr-12",
   },
 };
@@ -507,6 +501,10 @@ function isAirportCard(card: TripCardData) {
 
 function isAccommodationCard(card: TripCardData) {
   return card.category === "accommodation";
+}
+
+function isStructuredEditableCard(card: TripCardData) {
+  return card.category === "accommodation" || card.category === "transport";
 }
 
 function getTimeMode(card: TripCardData): "arrival" | "departure" | null {
@@ -575,8 +573,13 @@ export default function ArrangePage() {
     useState<PendingPlacementDecision | null>(null);
   const [destinationFilter, setDestinationFilter] = useState<string | null>(null);
   const [addCardOpen, setAddCardOpen] = useState(false);
+  const [preferredAddCategory, setPreferredAddCategory] = useState<"place" | "activity" | "transport" | "accommodation" | "food" | "etc">("place");
 
   const currentStep = 4;
+  const hasExistingTransport = useMemo(
+    () => stockCards.some((card) => card.category === "transport" && !card.is_excluded),
+    [stockCards]
+  );
 
   const fixedCardsByDay = useMemo(() => {
     const cardMap = new Map(stockCards.map((card) => [card.instance_id, card]));
@@ -673,7 +676,7 @@ export default function ArrangePage() {
         return finalizeProcessingTripCard(card);
       }
 
-      if (card.category === "accommodation" && card.processing_status === "processing") {
+      if (isStructuredEditableCard(card) && card.processing_status === "processing") {
         if (
           card.processing_started_at &&
           Date.now() - card.processing_started_at >= 3000
@@ -684,10 +687,21 @@ export default function ArrangePage() {
             placement_status: "ready" as const,
             processing_status: "completed" as const,
             action_type: "review_only" as const,
-            address: card.notes ?? card.address,
+            address:
+              card.category === "accommodation"
+                ? card.location ?? card.address
+                : card.address,
             notes: null,
             group_label: undefined,
             group_reason: undefined,
+            user_context:
+              card.category === "transport"
+                ? `${card.location ?? "공항"} 항공권 정보를 다시 정리했어요.`
+                : `${card.location ?? card.name} 기준으로 숙소 정보를 다시 정리했어요.`,
+            tips:
+              card.category === "transport"
+                ? "공항과 시간 정보를 바탕으로 이동 흐름을 다시 맞췄어요."
+                : "체크인과 체크아웃 기준으로 숙소 흐름을 다시 정리했어요.",
             processing_started_at: null,
           };
         }
@@ -810,6 +824,12 @@ export default function ArrangePage() {
       matchesDestination(card, destinationFilter)
     );
     const visibleStockCards = filteredStockCards.filter((card) => !isAirportCard(card));
+    const hasAnyAccommodation = stockCards.some(
+      (card) => card.category === "accommodation" && !card.is_excluded
+    );
+    const hasAnyTransport = stockCards.some(
+      (card) => card.category === "transport" && !card.is_excluded
+    );
 
     const groupedCardsByLabel = visibleStockCards
       .filter((card) => card.group_label)
@@ -903,6 +923,30 @@ export default function ArrangePage() {
     return {
       special: specialGroups,
       promoted: promotedGroups,
+      emptyPrompts: [
+        ...(!hasAnyAccommodation
+          ? [
+              {
+                id: "empty-accommodation",
+                title: "숙소",
+                reason: "아직 숙소 카드가 없어요. 위치와 체크인/체크아웃을 입력해 바로 추가할 수 있어요.",
+                ctaLabel: "숙소 추가하기",
+                category: "accommodation" as const,
+              },
+            ]
+          : []),
+        ...(!hasAnyTransport
+          ? [
+              {
+                id: "empty-transport",
+                title: "항공권",
+                reason: "아직 항공권 카드가 없어요. 공항과 시간을 먼저 넣어 Day 시작과 마무리를 잡아볼 수 있어요.",
+                ctaLabel: "항공권 추가하기",
+                category: "transport" as const,
+              },
+            ]
+          : []),
+      ],
       unpromoted: {
         title: "미승격 카드",
         reason: "needs_input, blocked 상태이거나 아직 AI 처리가 끝나지 않아 바로 배치할 수 없는 카드들이에요.",
@@ -910,6 +954,13 @@ export default function ArrangePage() {
       },
     };
   }, [destinationFilter, stockCards]);
+
+  const openAddCardDialog = (
+    category: "place" | "activity" | "transport" | "accommodation" | "food" | "etc" = "place"
+  ) => {
+    setPreferredAddCategory(category);
+    setAddCardOpen(true);
+  };
 
   const handleDragStart = (card: TripCardData, source: string) => {
     if (!canDrag(card)) return;
@@ -1064,15 +1115,22 @@ export default function ArrangePage() {
       }
     }
 
-    if (updatedCard.category === "accommodation" && (updatedCard.notes?.trim() || updatedCard.memo?.trim())) {
+    const structuredCardChanged =
+      updatedCard.processing_status === "processing" &&
+      isStructuredEditableCard(updatedCard);
+
+    if (structuredCardChanged) {
       syncCardAcrossBoard({
         ...updatedCard,
         classification: "confirmed",
         placement_status: "ready",
         processing_status: "processing",
         action_type: "review_only",
-        group_label: "숙소",
-        group_reason: ACCOMMODATION_PROCESSING_REASON,
+        group_label: updatedCard.category === "transport" ? "항공권" : "숙소",
+        group_reason:
+          updatedCard.category === "transport"
+            ? TRANSPORT_PROCESSING_REASON
+            : ACCOMMODATION_PROCESSING_REASON,
         processing_started_at: Date.now(),
       });
       return;
@@ -1201,8 +1259,7 @@ export default function ArrangePage() {
   const renderStockCard = (card: TripCardData, source: string) => {
     const isBlocked = card.placement_status === "blocked";
     const isNeedsInput = card.placement_status === "needs_input";
-    const isProcessing =
-      card.processing_status === "pending" || card.processing_status === "processing";
+    const isProcessing = card.processing_status === "processing";
     const isDraggable = canDrag(card);
     const placementCount = getPlacements(card.instance_id).length;
     const isPlaced = placementCount > 0;
@@ -1379,12 +1436,32 @@ export default function ArrangePage() {
           onSelectDestination: setDestinationFilter,
         }}
         rightButtons={
-          <button
-            onClick={() => setAddCardOpen(true)}
-            className="rounded-lg bg-[#534AB7] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#4840A0]"
-          >
-            카드 추가하기
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/arrange-alerts"
+              className="rounded-lg border border-[#E0E0E0] bg-white px-4 py-2 text-[13px] font-medium text-[#666] no-underline transition-colors hover:bg-[#F8F8F8]"
+            >
+              Alert Demo
+            </Link>
+            <Link
+              href="/arrange-alerts-integrated"
+              className="rounded-lg border border-[#E0E0E0] bg-white px-4 py-2 text-[13px] font-medium text-[#666] no-underline transition-colors hover:bg-[#F8F8F8]"
+            >
+              Alert 합친 Demo
+            </Link>
+            <Link
+              href="/arrange-unbooked"
+              className="rounded-lg border border-[#E0E0E0] bg-white px-4 py-2 text-[13px] font-medium text-[#666] no-underline transition-colors hover:bg-[#F8F8F8]"
+            >
+              미확정 케이스
+            </Link>
+            <button
+              onClick={() => openAddCardDialog()}
+              className="rounded-lg bg-[#534AB7] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#4840A0]"
+            >
+              카드 추가하기
+            </button>
+          </div>
         }
       />
 
@@ -1394,17 +1471,19 @@ export default function ArrangePage() {
             <h1 className="text-xl font-semibold text-[#1A1A1A]">일정 배치</h1>
             <p className="mt-1 text-sm text-[#888]">available/unavailable 구조로 배치 가능한 카드를 정리했어요</p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm text-[#666]">배치 완료</p>
-              <p className="text-lg font-semibold text-[#534AB7]">{placedCardsCount}/{totalCards}</p>
-            </div>
-            <div className="h-2 w-32 overflow-hidden rounded-full bg-[#E8E8E8]">
-              <div
-                className="h-full rounded-full bg-[#534AB7] transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/arrange-alerts-integrated"
+              className="rounded-xl border border-[#D8D8E8] bg-white px-5 py-2.5 text-sm font-medium text-[#534AB7] no-underline transition-colors hover:bg-[#F6F5FF]"
+            >
+              동선 검증하기
+            </Link>
+            <Link
+              href="/"
+              className="rounded-xl bg-[#534AB7] px-5 py-2.5 text-sm font-semibold text-white no-underline shadow-md shadow-[#534AB7]/20 transition-all hover:bg-[#4840A0]"
+            >
+              다음 단계
+            </Link>
           </div>
         </div>
       </div>
@@ -1456,6 +1535,24 @@ export default function ArrangePage() {
                 <div className="space-y-3">
                   {group.cards.map((card) => renderStockCard(card, "stock"))}
                 </div>
+              </div>
+            ))}
+
+            {stockSections.emptyPrompts.map((group) => (
+              <div key={group.id} className="rounded-2xl border border-dashed border-[#D8D8E8] bg-[#FAFAFA] p-4">
+                <div className="mb-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold text-[#1A1A1A]">{group.title}</h4>
+                    <span className="text-xs text-[#AAA]">0개</span>
+                  </div>
+                  <p className="mt-1 text-xs text-[#888]">{group.reason}</p>
+                </div>
+                <button
+                  onClick={() => openAddCardDialog(group.category)}
+                  className="rounded-xl border border-[#D8D8E8] bg-white px-3 py-2 text-xs font-semibold text-[#534AB7] transition-colors hover:bg-[#F6F5FF]"
+                >
+                  {group.ctaLabel}
+                </button>
               </div>
             ))}
 
@@ -1693,11 +1790,7 @@ export default function ArrangePage() {
             </span>
             <Link
               href="/"
-              className={`flex items-center gap-2 rounded-xl px-8 py-3 text-sm font-semibold no-underline transition-all ${
-                stockCards.every((card) => isCardPlaced(card.instance_id))
-                  ? "bg-[#534AB7] text-white shadow-md shadow-[#534AB7]/20 hover:bg-[#4840A0]"
-                  : "pointer-events-none cursor-not-allowed bg-[#E8E8E8] text-[#999]"
-              }`}
+              className="flex items-center gap-2 rounded-xl bg-[#534AB7] px-8 py-3 text-sm font-semibold text-white no-underline shadow-md shadow-[#534AB7]/20 transition-all hover:bg-[#4840A0]"
             >
               일정 확정하기
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1768,6 +1861,8 @@ export default function ArrangePage() {
         open={addCardOpen}
         onOpenChange={setAddCardOpen}
         onSubmit={handleAddCard}
+        hasExistingTransport={hasExistingTransport}
+        initialCategory={preferredAddCategory}
       />
     </div>
   );

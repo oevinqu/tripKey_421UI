@@ -805,6 +805,18 @@ export default function SCR05() {
         tripInfo={TRIP_INFO}
         rightButtons={
           <>
+            <Link
+              href="/final-alerts"
+              className="px-4 py-2 rounded-lg border border-[#E0E0E0] bg-white text-[#666] text-[13px] hover:bg-[#F9F9F9] transition-colors no-underline"
+            >
+              Alert Demo
+            </Link>
+            <Link
+              href="/final-alerts-integrated"
+              className="px-4 py-2 rounded-lg border border-[#E0E0E0] bg-white text-[#666] text-[13px] hover:bg-[#F9F9F9] transition-colors no-underline"
+            >
+              Alert 합친 Demo
+            </Link>
             <button
               onClick={() => setShowLegacyView((prev) => !prev)}
               className="flex items-center gap-3 rounded-lg border border-[#E0E0E0] bg-white px-4 py-2 text-[13px] text-[#666] transition-colors hover:bg-[#F9F9F9]"

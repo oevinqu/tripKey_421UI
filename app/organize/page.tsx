@@ -77,7 +77,7 @@ const DEMO_CARDS: TripCardData[] = [
     classification: "open_question",
     placement_status: "ready_partial",
     processing_status: "completed",
-    action_type: "input_required",
+    action_type: "review_only",
     can_exclude: false,
     allow_duplicate: true,
     is_excluded: false,
@@ -162,7 +162,7 @@ const DEMO_CARDS: TripCardData[] = [
     classification: "open_question",
     placement_status: "ready_partial",
     processing_status: "completed",
-    action_type: "select_required",
+    action_type: "review_only",
     can_exclude: true,
     allow_duplicate: false,
     is_excluded: false,
@@ -192,7 +192,7 @@ const DEMO_CARDS: TripCardData[] = [
     classification: "open_question",
     placement_status: "ready_partial",
     processing_status: "completed",
-    action_type: "select_required",
+    action_type: "review_only",
     can_exclude: true,
     allow_duplicate: false,
     is_excluded: false,
@@ -219,7 +219,7 @@ const DEMO_CARDS: TripCardData[] = [
     instance_id: "org-4",
     place_id: null,
     name: "와사카 성",
-    category: "place",
+    category: "etc",
     classification: "open_question",
     placement_status: "blocked",
     processing_status: "failed",
@@ -236,11 +236,11 @@ const DEMO_CARDS: TripCardData[] = [
     blocked_reason: "오타인 것 같아요",
     user_context: "AI가 장소명을 잘못 해석했을 가능성이 있어요",
     tips: "정확한 장소명으로 수정하면 이후 배치가 쉬워져요",
-    tags: ["오사카", "AI 후보"],
+    tags: ["AI 후보"],
     source: "dump",
     day: null,
     notes: null,
-    location: "오사카",
+    location: undefined,
   },
   {
     instance_id: "org-9",
@@ -427,6 +427,11 @@ export default function OrganizePage() {
     [cards]
   );
 
+  const hasExistingTransport = useMemo(
+    () => cards.some((card) => card.category === "transport" && !card.is_excluded),
+    [cards]
+  );
+
   const toggleGroup = (group: GroupKey) => {
     setExpandedGroups((prev) => ({
       ...prev,
@@ -542,12 +547,26 @@ export default function OrganizePage() {
           onSelectDestination: setDestinationFilter,
         }}
         rightButtons={
-          <button
-            onClick={() => setAddCardOpen(true)}
-            className="rounded-lg bg-[#534AB7] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#4840A0]"
-          >
-            카드 추가하기
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/organize-alerts"
+              className="rounded-lg border border-[#E0E0E0] bg-white px-4 py-2 text-[13px] font-medium text-[#666] no-underline transition-colors hover:bg-[#F8F8F8]"
+            >
+              Alert Demo
+            </Link>
+            <Link
+              href="/organize-alerts-integrated"
+              className="rounded-lg border border-[#E0E0E0] bg-white px-4 py-2 text-[13px] font-medium text-[#666] no-underline transition-colors hover:bg-[#F8F8F8]"
+            >
+              Alert 합친 Demo
+            </Link>
+            <button
+              onClick={() => setAddCardOpen(true)}
+              className="rounded-lg bg-[#534AB7] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#4840A0]"
+            >
+              카드 추가하기
+            </button>
+          </div>
         }
       />
 
@@ -753,6 +772,7 @@ export default function OrganizePage() {
         open={addCardOpen}
         onOpenChange={setAddCardOpen}
         onSubmit={handleAddCard}
+        hasExistingTransport={hasExistingTransport}
       />
     </div>
   );
