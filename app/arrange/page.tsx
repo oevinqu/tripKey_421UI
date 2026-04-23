@@ -653,8 +653,8 @@ export default function ArrangePage() {
   const placedCardIds = new Set(
     [...fixedPlacementIds, ...days.flatMap((day) => day.cards.map((card) => card.instance_id))]
   );
-  const visibleStockCount = stockCards.filter(
-    (card) => !isAirportCard(card) && matchesDestination(card, destinationFilter)
+  const visibleStockCount = stockCards.filter((card) =>
+    matchesDestination(card, destinationFilter)
   ).length;
   const placedCardsCount = placedCardIds.size;
   const totalCards = stockCards.length;
@@ -823,7 +823,7 @@ export default function ArrangePage() {
     const filteredStockCards = stockCards.filter((card) =>
       matchesDestination(card, destinationFilter)
     );
-    const visibleStockCards = filteredStockCards.filter((card) => !isAirportCard(card));
+    const visibleStockCards = filteredStockCards;
     const hasAnyAccommodation = stockCards.some(
       (card) => card.category === "accommodation" && !card.is_excluded
     );
@@ -892,8 +892,8 @@ export default function ArrangePage() {
         ? [
             {
               id: "airport",
-              title: "공항",
-              reason: "공항 이동과 출발/도착 카드는 별도 흐름으로 관리하기 위해 따로 묶었어요.",
+              title: "항공권",
+              reason: "항공권은 Day에 고정되어 있어도 변경될 수 있어요. 드래그하지 않고 클릭해서 수정합니다.",
               cards: airportCards,
             },
           ]
@@ -1260,10 +1260,11 @@ export default function ArrangePage() {
     const isBlocked = card.placement_status === "blocked";
     const isNeedsInput = card.placement_status === "needs_input";
     const isProcessing = card.processing_status === "processing";
-    const isDraggable = canDrag(card);
+    const isClickOnlyTransport = isAirportCard(card);
+    const isDraggable = canDrag(card) && !isClickOnlyTransport;
     const placementCount = getPlacements(card.instance_id).length;
     const isPlaced = placementCount > 0;
-    const ghostClass = isPlaced
+    const ghostClass = isPlaced && !isClickOnlyTransport
       ? card.allow_duplicate
         ? "opacity-75"
         : "opacity-45 saturate-0"
@@ -1279,9 +1280,15 @@ export default function ArrangePage() {
       >
         <TripCard card={card} onClick={() => handleCardClick(card)} compact />
 
-        {isPlaced && (
+        {isPlaced && !isClickOnlyTransport && (
           <div className="absolute bottom-2 right-2 rounded-full border border-[#D8D8D8] bg-white/90 px-2 py-0.5 text-[10px] font-medium text-[#666]">
             {card.allow_duplicate ? `중복 배치 ${placementCount}` : "이미 배치됨"}
+          </div>
+        )}
+
+        {isClickOnlyTransport && (
+          <div className="absolute bottom-2 right-2 rounded-full border border-[#D8D8E8] bg-white/95 px-2 py-0.5 text-[10px] font-medium text-[#534AB7]">
+            클릭하여 수정
           </div>
         )}
 
@@ -1511,7 +1518,7 @@ export default function ArrangePage() {
                 <span className="text-sm text-[#888]">
                   {destinationFilter
                     ? `${visibleStockCount}개`
-                    : `${stockCards.filter((card) => !isAirportCard(card)).length}개`}
+                    : `${stockCards.length}개`}
                 </span>
               </div>
             </div>
